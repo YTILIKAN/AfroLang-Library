@@ -31,9 +31,22 @@ Champs persistés par Dataset (dérivés du Glossaire §3) :
 
 Tables/collections concrètes = livrable architecture.
 
+## Authentification et comptes (ajout révision 2026-07-01 — À TRANCHER en architecture)
+
+Le MVP introduit des Comptes + rôles (Chercheur, Admin) — voir §4.7/§4.8 du PRD. Options d'auth **gratuites** à évaluer :
+- **Auth.js / NextAuth** (côté Next.js) : intégration native au front, providers e-mail/OAuth, gratuit.
+- **Auth de Supabase** : si le stockage bascule vers Supabase (Option A archi), l'auth vient avec.
+- Solution maison minimale (déconseillée pour 3 personnes : coût sécurité).
+
+Contraintes : contrôle d'accès par rôle (un Chercheur n'agit que sur ses données — FR-18), protection de l'interface d'admin. Tant que le MVP tourne **en local**, l'auth peut rester minimale ; le **durcissement** (mots de passe, chiffrement, protection admin) est requis **avant déploiement public** (PRD §8, §10 Sécurité).
+
+## Modèle de données — entités de comptes (ajout révision 2026-07-01)
+
+En plus du Dataset : entité **Compte** (identité minimale, rôle : chercheur/admin) et lien **Provenance** entre un Dataset `contribué` et le Compte qui l'a soumis. Champ **origine** du Dataset étendu : `synchronisé` | `contribué` (avec Compte) | `manuel`.
+
 ## Infrastructure de synchronisation (rappel + HYPOTHÈSE)
 
-Piste principale : **GitHub Actions sur planning cron** (gratuit) exécute les Connecteurs et écrit l'Index. Fréquence par défaut supposée quotidienne (FR-2), à confirmer selon quotas des API des Sources.
+Piste principale (phase 2) : **GitHub Actions sur planning cron** (gratuit) exécute les Connecteurs et écrit l'Index. **Au MVP, l'Ingestion est déclenchée à la demande** (pas de cron) et le déploiement est différé (local d'abord). Fréquence de synchro automatique (phase 2) à confirmer selon quotas des API.
 
 ## Connecteurs (architecture d'extension)
 

@@ -30,6 +30,17 @@
 
 ---
 
+## 2026-07-04 : Liste de questions (après le pivot comptes / contributions)
+
+> Contexte : ajout de comptes + rôles + contributions + interface d'admin ; cron/synchro auto → phase 2 ; déploiement différé (MVP en local) ; favoris → phase 2.
+
+14. **Solution d'authentification gratuite** : Auth.js/NextAuth, auth de Supabase, ou autre ? (dépend en partie du choix stockage/déploiement — questions 1 et 2).
+15. **Durcissement de la sécurité avant déploiement public** : comment protéger l'interface d'administration et la surface d'écriture (mots de passe, sessions, accès admin) une fois en ligne ?
+16. **Contrôle qualité des contributions** : faut-il une vérification minimale à la soumission d'un dataset par un chercheur (au-delà de la correction a posteriori par l'admin), pour limiter le bruit ?
+17. **Critère de « maturité »** : qu'est-ce qui déclenche le passage du MVP local au déploiement public ?
+
+---
+
 <!-- Modèle pour les prochaines réunions :
 
 ## AAAA-MM-JJ : Liste de questions
