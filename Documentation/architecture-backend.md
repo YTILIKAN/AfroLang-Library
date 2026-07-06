@@ -1,10 +1,10 @@
 # Architecture backend — AfroLang-Library
 
-> Document de référence décrivant la structure interne de `backend/`, issue de la réflexion menée sur le choix d'architecture.
+> Document de référence décrivant la structure interne de `backend-api/`, issue de la réflexion menée sur le choix d'architecture.
 
 ## Décision : monolithe modulaire
 
-Une architecture en microservices (services séparés, déploiements indépendants, communication réseau entre services) ajoute un coût opérationnel (CI/CD multiple, monitoring distribué, gestion des pannes réseau) sans bénéfice mesurable à ce stade.
+Pour une équipe solo ou de 2 personnes, une architecture en microservices (services séparés, déploiements indépendants, communication réseau entre services) ajoute un coût opérationnel (CI/CD multiple, monitoring distribué, gestion des pannes réseau) sans bénéfice mesurable à ce stade.
 
 À la place, le backend est un **monolithe modulaire** : un seul déploiement, une seule base de code, mais organisée de façon à pouvoir extraire un module en service séparé plus tard si le besoin se confirme.
 
@@ -110,6 +110,13 @@ Avantage : si la logique interne d'`ingestion` change complètement, `catalog` c
 
 `scheduler` doit explicitement déclencher `ingestion` à intervalle régulier — une communication indirecte par base de données ne fonctionnerait pas ici.
 
+```python
+# scheduler/jobs.py
+from ingestion.service import run_full_sync
+
+def scheduled_sync_job():
+    run_full_sync()
+```
 
 Règle : un module ne peut appeler que le `service.py` d'un autre module, jamais son `repository.py` ou ses `models.py` directement. `service.py` est l'unique porte d'entrée officielle d'un module.
 
@@ -159,4 +166,13 @@ Démarrer avec la recherche full-text native de PostgreSQL plutôt que d'introdu
 
 ---
 
+## Résumé des décisions
 
+| Question | Décision | Raison principale |
+|---|---|---|
+| Microservices ou monolithe ? | Monolithe modulaire | Équipe de 1-2 personnes, pas de bénéfice mesurable aux microservices à ce stade |
+| Organisation du code | Modules par domaine + couches par responsabilité | Lisibilité, découplage logique sans coût opérationnel |
+| Communication inter-modules | Via base de données (indirect) ou `service.py` (direct, cas `scheduler`) | Évite le couplage entre détails internes des modules |
+| Bases de données | Une seule PostgreSQL partagée | Pas de besoin d'isolation physique identifié |
+| Accès externe (benchmarking, etc.) | Toujours via API REST | Pas de couplage de schéma avec des systèmes externes |
+| Recherche | PostgreSQL full-text au départ | Évite d'ajouter un service supplémentaire sans besoin prouvé |
