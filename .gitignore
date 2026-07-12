@@ -2,3 +2,25 @@
 CLAUDE.md
 _bmad
 _bmad-output
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+*.db
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
