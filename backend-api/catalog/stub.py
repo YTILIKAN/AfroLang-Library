@@ -9,6 +9,7 @@ from catalog.api_schemas import (
     SourceResponse,
     TaskResponse,
 )
+from catalog.language_resolver import resolve_language_code
 from core.models import UNKNOWN, Provenance
 
 _STUB_DATASETS: list[DatasetDetailResponse] = [
@@ -67,22 +68,6 @@ _STUB_DATASETS: list[DatasetDetailResponse] = [
         updated_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
     ),
 ]
-
-_LANGUAGE_ALIASES: dict[str, str] = {
-    "yor": "yor",
-    "yoruba": "yor",
-    "yorùbá": "yor",
-    "wol": "wol",
-    "wolof": "wol",
-    "swh": "swh",
-    "swahili": "swh",
-    "swa": "swh",
-}
-
-
-def resolve_language_code(query: str) -> str | None:
-    normalized = query.strip().lower()
-    return _LANGUAGE_ALIASES.get(normalized)
 
 
 def search_by_language(language_query: str) -> DatasetSearchResponse:

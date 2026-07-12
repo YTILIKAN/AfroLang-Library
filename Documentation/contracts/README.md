@@ -9,7 +9,14 @@
 
 ## Bouchon API catalog
 
-Par défaut, l'API tourne en mode bouchon (`CATALOG_STUB=true` dans `.env` ou variable d'environnement).
+Par défaut, l'API utilise l'**implémentation réelle** (`CATALOG_STUB=false`) avec seed automatique au démarrage si l'index est vide.
+
+Pour revenir au bouchon (frontend sans base) :
+
+```env
+CATALOG_STUB=true
+CATALOG_AUTO_SEED=false
+```
 
 ```powershell
 # Backend
