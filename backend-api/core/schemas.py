@@ -42,4 +42,5 @@ class DatasetInput(BaseModel):
     data_format: str = UNKNOWN
     size: str = UNKNOWN
     task_codes: list[str] = Field(default_factory=list)
+    task_tags_raw: str = UNKNOWN
     published_at: datetime | None = None

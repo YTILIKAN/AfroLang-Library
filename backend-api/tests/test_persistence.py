@@ -43,6 +43,7 @@ def _sample_dataset() -> DatasetInput:
         data_format="audio",
         size="2.5 GB",
         task_codes=["asr"],
+        task_tags_raw="automatic-speech-recognition",
     )
 
 
@@ -95,6 +96,7 @@ def test_storage_contains_metadata_only(session: Session) -> None:
         "source_id",
         "language_code",
         "language_raw",
+        "task_tags_raw",
         "license_id",
         "provenance",
         "data_format",

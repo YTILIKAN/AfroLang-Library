@@ -1,12 +1,22 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from core.config import get_settings
 from ingestion.connectors import RawDatasetMetadata
 from ingestion.connectors.base import SourceConnector
 from main import app
 
 
 client = TestClient(app)
+
+
+@pytest.fixture()
+def stub_catalog(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("CATALOG_STUB", "true")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+    monkeypatch.delenv("CATALOG_STUB", raising=False)
 
 
 class _FakeConnector(SourceConnector):
@@ -51,7 +61,7 @@ def test_connector_contract_captures_errors() -> None:
     assert "API indisponible" in result.errors[0]
 
 
-def test_stub_search_by_language_aliases() -> None:
+def test_stub_search_by_language_aliases(stub_catalog) -> None:
     yoruba = client.get("/catalog/datasets/search", params={"language": "Yoruba"})
     yor = client.get("/catalog/datasets/search", params={"language": "yor"})
     yoruba_accent = client.get("/catalog/datasets/search", params={"language": "Yorùbá"})
@@ -71,7 +81,7 @@ def test_stub_search_by_language_aliases() -> None:
     assert body_yoruba["datasets"][0]["source_url"].startswith("https://")
 
 
-def test_stub_dataset_detail() -> None:
+def test_stub_dataset_detail(stub_catalog) -> None:
     response = client.get("/catalog/datasets/1")
     assert response.status_code == 200
     body = response.json()
@@ -81,6 +91,6 @@ def test_stub_dataset_detail() -> None:
     assert "content" not in body
 
 
-def test_stub_dataset_not_found() -> None:
+def test_stub_dataset_not_found(stub_catalog) -> None:
     response = client.get("/catalog/datasets/9999")
     assert response.status_code == 404

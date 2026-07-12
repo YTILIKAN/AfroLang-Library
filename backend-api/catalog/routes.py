@@ -3,12 +3,10 @@ from sqlmodel import Session
 
 from catalog import stub as catalog_stub
 from catalog.api_schemas import DatasetDetailResponse, DatasetSearchResponse
-from catalog.mappers import dataset_to_detail, dataset_to_summary
+from catalog.mappers import dataset_to_detail
 from catalog.service import CatalogService
-from catalog.stub import resolve_language_code
 from core.config import Settings, get_settings
 from core.database import get_session
-from core.models import UNKNOWN
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -23,7 +21,7 @@ def get_catalog_service(session: Session = Depends(get_session)) -> CatalogServi
     summary="Rechercher des datasets par langue",
     description=(
         "Recherche par code ISO 639-3 ou alias (ex. « yor », « Yoruba », « Yorùbá »). "
-        "Contrat figé en Story 1.3 — bouchon actif tant que `CATALOG_STUB=true`."
+        "Implémentation réelle (Story 1.11) ; bouchon disponible via `CATALOG_STUB=true`."
     ),
 )
 def search_datasets_by_language(
@@ -33,15 +31,7 @@ def search_datasets_by_language(
 ) -> DatasetSearchResponse:
     if settings.catalog_stub:
         return catalog_stub.search_by_language(language)
-
-    language_code = resolve_language_code(language) or language.strip().lower()
-    datasets = service.list_datasets_for_language(language_code)
-    return DatasetSearchResponse(
-        language_query=language,
-        language_code=language_code if datasets else UNKNOWN,
-        total=len(datasets),
-        datasets=[dataset_to_summary(dataset) for dataset in datasets],
-    )
+    return service.search_datasets_by_language(language)
 
 
 @router.get(

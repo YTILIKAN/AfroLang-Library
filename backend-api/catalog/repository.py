@@ -2,6 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
+from catalog.language_resolver import resolve_language_code
 from core.models import Dataset, Language, Source
 
 
@@ -32,8 +33,20 @@ class CatalogRepository:
         )
         return self.session.exec(statement).first()
 
+    def resolve_language_code(self, query: str) -> str | None:
+        return resolve_language_code(query, self.session)
+
     def list_datasets_by_language(self, language_code: str) -> list[Dataset]:
-        statement = select(Dataset).where(Dataset.language_code == language_code)
+        statement = (
+            select(Dataset)
+            .where(Dataset.language_code == language_code)
+            .options(
+                selectinload(Dataset.source),
+                selectinload(Dataset.language),
+                selectinload(Dataset.license),
+                selectinload(Dataset.tasks),
+            )
+        )
         return list(self.session.exec(statement).all())
 
     def get_language(self, code: str) -> Language | None:
