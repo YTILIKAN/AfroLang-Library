@@ -1,4 +1,5 @@
 from sqlalchemy import text
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
 from core.models import Dataset, Language, Source
@@ -11,7 +12,17 @@ class CatalogRepository:
         self.session = session
 
     def get_dataset_by_id(self, dataset_id: int) -> Dataset | None:
-        return self.session.get(Dataset, dataset_id)
+        statement = (
+            select(Dataset)
+            .where(Dataset.id == dataset_id)
+            .options(
+                selectinload(Dataset.source),
+                selectinload(Dataset.language),
+                selectinload(Dataset.license),
+                selectinload(Dataset.tasks),
+            )
+        )
+        return self.session.exec(statement).first()
 
     def get_dataset_by_source_external_id(self, source_slug: str, external_id: str) -> Dataset | None:
         statement = (

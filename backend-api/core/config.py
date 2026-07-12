@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     debug: bool = False
     database_url: str = "sqlite:///./aflang.db"
     log_level: str = "INFO"
+    catalog_stub: bool = True
 
 
 @lru_cache
