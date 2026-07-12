@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 
 from core.models import Dataset, DatasetTaskLink, Language, License, Source, Task, utc_now
 from core.schemas import DatasetInput, LanguageInput, LicenseInput, SourceInput, TaskInput
+from ingestion.normalization.vocabulary import get_task_label
 
 
 class IngestionRepository:
@@ -76,8 +77,11 @@ class IngestionRepository:
     def save_dataset(self, payload: DatasetInput) -> Dataset:
         source = self.upsert_source(payload.source)
         language = self.upsert_language(payload.language)
-        license_ = self.upsert_license(payload.license) if payload.license else None
-        tasks = [self.upsert_task(TaskInput(code=code, label=code.upper())) for code in payload.task_codes]
+        license_ = self.upsert_license(payload.license) if payload.license else self.upsert_license(LicenseInput())
+        tasks = [
+            self.upsert_task(TaskInput(code=code, label=get_task_label(code)))
+            for code in payload.task_codes
+        ] or [self.upsert_task(TaskInput(code="inconnu", label=get_task_label("inconnu")))]
 
         statement = select(Dataset).where(
             Dataset.source_id == source.id,
@@ -96,7 +100,8 @@ class IngestionRepository:
                 source_id=source.id,
                 language_code=language.code,
                 language_raw=payload.language_raw,
-                license_id=license_.id if license_ else None,
+                task_tags_raw=payload.task_tags_raw,
+                license_id=license_.id,
                 provenance=payload.provenance,
                 data_format=payload.data_format,
                 size=payload.size,
@@ -111,7 +116,8 @@ class IngestionRepository:
             dataset.description = payload.description
             dataset.language_code = language.code
             dataset.language_raw = payload.language_raw
-            dataset.license_id = license_.id if license_ else None
+            dataset.task_tags_raw = payload.task_tags_raw
+            dataset.license_id = license_.id
             dataset.provenance = payload.provenance
             dataset.data_format = payload.data_format
             dataset.size = payload.size

@@ -79,6 +79,7 @@ class Dataset(SQLModel, table=True):
     source_id: int = Field(foreign_key="source.id", index=True)
     language_code: str = Field(foreign_key="language.code", index=True)
     language_raw: str = Field(default=UNKNOWN, description="Valeur brute d'origine pour traçabilité")
+    task_tags_raw: str = Field(default=UNKNOWN, description="Tags de tâche bruts d'origine pour traçabilité")
     license_id: Optional[int] = Field(default=None, foreign_key="license.id")
     provenance: Provenance = Field(index=True)
     data_format: str = Field(default=UNKNOWN)
