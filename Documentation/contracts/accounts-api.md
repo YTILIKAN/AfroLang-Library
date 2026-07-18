@@ -157,6 +157,19 @@ Contrat détaillé : [accounts-admin-datasets-api.md](./accounts-admin-datasets-
 
 ---
 
+## Administration des comptes (Story 4.2 — FR-20)
+
+Contrat détaillé : [accounts-admin-accounts-api.md](./accounts-admin-accounts-api.md)
+
+| Méthode | Chemin | Rôle |
+| --- | --- | --- |
+| GET | `/accounts/admin/accounts` | Admin |
+| GET | `/accounts/admin/accounts/{id}` | Admin |
+| POST | `/accounts/admin/accounts` | Admin |
+| PATCH | `/accounts/admin/accounts/{id}` | Admin |
+
+---
+
 ## Erreurs courantes
 
 | Code | Cas |

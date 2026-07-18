@@ -60,6 +60,19 @@ class AdminAccountsResponse(BaseModel):
     accounts: list[AccountResponse]
 
 
+class AdminAccountCreateRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    display_name: str = Field(min_length=1, max_length=120)
+    role: AccountRole = AccountRole.CHERCHEUR
+
+
+class AdminAccountUpdateRequest(BaseModel):
+    display_name: str | None = Field(default=None, min_length=1, max_length=120)
+    role: AccountRole | None = None
+    is_active: bool | None = None
+
+
 class AdminDatasetListResponse(BaseModel):
     total: int
     datasets: list[DatasetSummaryResponse]

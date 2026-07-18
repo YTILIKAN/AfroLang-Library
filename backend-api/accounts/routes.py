@@ -4,10 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session
 
+from accounts.admin_account_service import AdminAccountService
 from accounts.admin_service import AdminDatasetService
 from accounts import stub as accounts_stub
 from accounts.api_schemas import (
     AccountResponse,
+    AdminAccountCreateRequest,
+    AdminAccountUpdateRequest,
     AdminAccountsResponse,
     AdminDatasetCreateRequest,
     AdminDatasetListResponse,
@@ -83,6 +86,10 @@ def get_admin_dataset_service(session: Session = Depends(get_session)) -> AdminD
     return AdminDatasetService(session)
 
 
+def get_admin_account_service(session: Session = Depends(get_session)) -> AdminAccountService:
+    return AdminAccountService(session)
+
+
 @router.post(
     "/auth/register",
     response_model=AccountResponse,
@@ -122,6 +129,8 @@ def login(
         try:
             return accounts_stub.login(payload.email, payload.password)
         except ValueError as exc:
+            if str(exc) == "Compte désactivé":
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
     return service.login(email=payload.email, password=payload.password)
 
@@ -238,21 +247,77 @@ def delete_my_dataset(
 @router.get(
     "/admin/accounts",
     response_model=AdminAccountsResponse,
-    summary="Lister les comptes (Admin, bouchon)",
-    description="Gestion des comptes — implémentation complète en Story 4.2 (FR-20).",
+    summary="Lister les comptes (Admin)",
+    description="Gestion des comptes — Story 4.2 (FR-20).",
 )
 def admin_list_accounts(
     account: Account = Depends(require_admin_account),
     settings: Settings = Depends(get_settings),
-    service: AccountsService = Depends(get_accounts_service),
+    admin_account_service: AdminAccountService = Depends(get_admin_account_service),
 ) -> AdminAccountsResponse:
     if settings.accounts_stub:
         return accounts_stub.admin_list_accounts()
-    accounts = service.repository.list_accounts()
-    return AdminAccountsResponse(
-        total=len(accounts),
-        accounts=[service.get_me(item) for item in accounts],
-    )
+    total, accounts = admin_account_service.list_accounts()
+    return AdminAccountsResponse(total=total, accounts=accounts)
+
+
+@router.get(
+    "/admin/accounts/{account_id}",
+    response_model=AccountResponse,
+    summary="Fiche compte (Admin)",
+)
+def admin_get_account(
+    account_id: int,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_account_service: AdminAccountService = Depends(get_admin_account_service),
+) -> AccountResponse:
+    if settings.accounts_stub:
+        try:
+            return accounts_stub.admin_get_account(account_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return admin_account_service.get_account(account_id)
+
+
+@router.post(
+    "/admin/accounts",
+    response_model=AccountResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Créer un compte (Admin)",
+)
+def admin_create_account(
+    payload: AdminAccountCreateRequest,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_account_service: AdminAccountService = Depends(get_admin_account_service),
+) -> AccountResponse:
+    if settings.accounts_stub:
+        try:
+            return accounts_stub.admin_create_account(payload)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return admin_account_service.create_account(payload)
+
+
+@router.patch(
+    "/admin/accounts/{account_id}",
+    response_model=AccountResponse,
+    summary="Modifier ou désactiver un compte (Admin)",
+)
+def admin_update_account(
+    account_id: int,
+    payload: AdminAccountUpdateRequest,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_account_service: AdminAccountService = Depends(get_admin_account_service),
+) -> AccountResponse:
+    if settings.accounts_stub:
+        try:
+            return accounts_stub.admin_update_account(account_id, payload)
+        except LookupError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return admin_account_service.update_account(account_id, payload, acting_admin=account)
 
 
 @router.get(

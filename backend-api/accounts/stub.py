@@ -2,6 +2,8 @@ from datetime import datetime, timedelta, timezone
 
 from accounts.api_schemas import (
     AccountResponse,
+    AdminAccountCreateRequest,
+    AdminAccountUpdateRequest,
     AdminAccountsResponse,
     AdminDatasetCreateRequest,
     AdminDatasetListResponse,
@@ -32,12 +34,14 @@ def _ensure_stub_accounts() -> None:
                 "display_name": "Kofi Mensah",
                 "role": AccountRole.CHERCHEUR,
                 "password_hash": hash_password(_STUB_PASSWORD),
+                "is_active": True,
             },
             "admin@afriland.org": {
                 "id": 1,
                 "display_name": "Admin AfroLang",
                 "role": AccountRole.ADMIN,
                 "password_hash": hash_password(_STUB_ADMIN_PASSWORD),
+                "is_active": True,
             },
         }
     )
@@ -63,7 +67,7 @@ def _account_response(email: str, data: dict) -> AccountResponse:
         email=email,
         display_name=data["display_name"],
         role=data["role"],
-        is_active=True,
+        is_active=data.get("is_active", True),
         created_at=datetime(2026, 1, 15, tzinfo=timezone.utc),
     )
 
@@ -79,6 +83,7 @@ def register(email: str, display_name: str, password: str) -> AccountResponse:
         "display_name": display_name.strip(),
         "role": AccountRole.CHERCHEUR,
         "password_hash": hash_password(password),
+        "is_active": True,
     }
     _STUB_MY_DATASETS[account_id] = []
     return _account_response(normalized, _STUB_ACCOUNTS[normalized])
@@ -92,6 +97,8 @@ def login(email: str, password: str) -> TokenResponse:
     data = _STUB_ACCOUNTS.get(normalized)
     if data is None or not verify_password(password, data["password_hash"]):
         raise ValueError("Identifiants invalides")
+    if not data.get("is_active", True):
+        raise ValueError("Compte désactivé")
 
     token = f"stub-token-{data['id']}-{len(_STUB_TOKENS)}"
     _STUB_TOKENS[token] = normalized
@@ -112,7 +119,10 @@ def resolve_account(token: str) -> AccountResponse:
     email = _STUB_TOKENS.get(token)
     if email is None:
         raise LookupError("Session invalide")
-    return _account_response(email, _STUB_ACCOUNTS[email])
+    data = _STUB_ACCOUNTS[email]
+    if not data.get("is_active", True):
+        raise LookupError("Compte indisponible")
+    return _account_response(email, data)
 
 
 def submit_dataset(account_id: int, payload: SubmitDatasetRequest) -> dict:
@@ -157,6 +167,50 @@ def admin_list_accounts() -> AdminAccountsResponse:
     _ensure_stub_accounts()
     accounts = [_account_response(email, data) for email, data in _STUB_ACCOUNTS.items()]
     return AdminAccountsResponse(total=len(accounts), accounts=accounts)
+
+
+def admin_get_account(account_id: int) -> AccountResponse:
+    _ensure_stub_accounts()
+    for email, data in _STUB_ACCOUNTS.items():
+        if data["id"] == account_id:
+            return _account_response(email, data)
+    raise LookupError("Compte introuvable")
+
+
+def admin_create_account(payload: AdminAccountCreateRequest) -> AccountResponse:
+    _ensure_stub_accounts()
+    normalized = payload.email.strip().lower()
+    if normalized in _STUB_ACCOUNTS:
+        raise ValueError("Un compte existe déjà avec cet e-mail")
+    account_id = max(data["id"] for data in _STUB_ACCOUNTS.values()) + 1
+    _STUB_ACCOUNTS[normalized] = {
+        "id": account_id,
+        "display_name": payload.display_name.strip(),
+        "role": payload.role,
+        "password_hash": hash_password(payload.password),
+        "is_active": True,
+    }
+    _STUB_MY_DATASETS[account_id] = []
+    return _account_response(normalized, _STUB_ACCOUNTS[normalized])
+
+
+def admin_update_account(account_id: int, payload: AdminAccountUpdateRequest) -> AccountResponse:
+    _ensure_stub_accounts()
+    for email, data in _STUB_ACCOUNTS.items():
+        if data["id"] != account_id:
+            continue
+        if payload.display_name is not None:
+            data["display_name"] = payload.display_name.strip()
+        if payload.role is not None:
+            data["role"] = payload.role
+        if payload.is_active is not None:
+            data["is_active"] = payload.is_active
+            if not payload.is_active:
+                tokens_to_remove = [token for token, mapped_email in _STUB_TOKENS.items() if mapped_email == email]
+                for token in tokens_to_remove:
+                    _STUB_TOKENS.pop(token, None)
+        return _account_response(email, data)
+    raise LookupError("Compte introuvable")
 
 
 _STUB_ADMIN_DATASETS: list[DatasetDetailResponse] = []

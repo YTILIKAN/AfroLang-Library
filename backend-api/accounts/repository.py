@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from accounts.auth import as_utc
 from accounts.models import AccountSession
-from core.models import Account, AccountRole
+from core.models import Account, AccountRole, utc_now
 
 
 class AccountsRepository:
@@ -60,6 +60,32 @@ class AccountsRepository:
         for row in self.session.exec(statement).all():
             if as_utc(row.expires_at) <= now:
                 self.session.delete(row)
+        self.session.commit()
+
+    def update_account(
+        self,
+        account: Account,
+        *,
+        display_name: str | None = None,
+        role: AccountRole | None = None,
+        is_active: bool | None = None,
+    ) -> Account | None:
+        if display_name is not None:
+            account.display_name = display_name.strip()
+        if role is not None:
+            account.role = role
+        if is_active is not None:
+            account.is_active = is_active
+        account.updated_at = utc_now()
+        self.session.add(account)
+        self.session.commit()
+        self.session.refresh(account)
+        return account
+
+    def delete_sessions_for_account(self, account_id: int) -> None:
+        statement = select(AccountSession).where(AccountSession.account_id == account_id)
+        for row in self.session.exec(statement).all():
+            self.session.delete(row)
         self.session.commit()
 
     def list_accounts(self) -> list[Account]:

@@ -11,6 +11,7 @@
 | **API publique v1** | [catalog-public-api.md](./catalog-public-api.md) | `/api/v1/*` (Story 2.3, FR-15) |
 | **API `accounts`** | [accounts-api.md](./accounts-api.md) | `/accounts/*` (Story 3.1, FR-16) |
 | **API admin datasets** | [accounts-admin-datasets-api.md](./accounts-admin-datasets-api.md) | `/accounts/admin/datasets/*` (Story 4.1, FR-19) |
+| **API admin comptes** | [accounts-admin-accounts-api.md](./accounts-admin-accounts-api.md) | `/accounts/admin/accounts/*` (Story 4.2, FR-20) |
 
 ## Bouchon API catalog
 
