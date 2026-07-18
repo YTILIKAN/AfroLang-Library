@@ -97,3 +97,18 @@ class LanguageOverviewResponse(BaseModel):
     language: LanguageResponse | None = Field(default=None, description="Métadonnées de la langue")
     stats: LanguageAggregationStats
     datasets: list[DatasetSummaryResponse]
+
+
+class ApiEndpointInfo(BaseModel):
+    method: str
+    path: str
+    description: str
+
+
+class ApiInfoResponse(BaseModel):
+    """Manifeste de l'API publique v1 (Story 2.3)."""
+
+    name: str
+    version: str
+    read_only: bool = True
+    endpoints: list[ApiEndpointInfo]
