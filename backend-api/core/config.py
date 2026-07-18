@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     catalog_stub: bool = False
     catalog_auto_seed: bool = True
+    kaggle_username: str | None = None
+    kaggle_key: str | None = None
 
 
 @lru_cache

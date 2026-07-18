@@ -9,7 +9,7 @@ from catalog.api_schemas import (
     SourceResponse,
     TaskResponse,
 )
-from catalog.language_resolver import resolve_language_code
+from core.language_codes import resolve_language_code
 from core.models import UNKNOWN, Provenance
 
 _STUB_DATASETS: list[DatasetDetailResponse] = [
