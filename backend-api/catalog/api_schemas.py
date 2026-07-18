@@ -60,3 +60,22 @@ class DatasetDetailResponse(DatasetSummaryResponse):
 
     created_at: datetime
     updated_at: datetime
+
+
+class AppliedFiltersResponse(BaseModel):
+    """Filtres appliqués après normalisation (Story 2.1)."""
+
+    language: str | None = Field(default=None, description="Paramètre langue tel que reçu")
+    language_code: str | None = Field(default=None, description="Code ISO 639-3 résolu")
+    source: str | None = Field(default=None, description="Slug source normalisé")
+    task: str | None = Field(default=None, description="Paramètre tâche tel que reçu")
+    task_code: str | None = Field(default=None, description="Code tâche du vocabulaire contrôlé")
+    data_format: str | None = Field(default=None, description="Format de données normalisé")
+
+
+class DatasetFilterResponse(BaseModel):
+    """Réponse de GET /catalog/datasets/filter (Story 2.1)."""
+
+    filters: AppliedFiltersResponse
+    total: int
+    datasets: list[DatasetSummaryResponse]

@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
 
 from catalog.api_schemas import (
+    AppliedFiltersResponse,
     DatasetDetailResponse,
+    DatasetFilterResponse,
     DatasetSearchResponse,
     DatasetSummaryResponse,
     LanguageResponse,
@@ -9,6 +11,7 @@ from catalog.api_schemas import (
     SourceResponse,
     TaskResponse,
 )
+from catalog.filter_params import normalize_data_format, normalize_source_slug, resolve_task_filter
 from catalog.language_resolver import resolve_language_code
 from core.models import UNKNOWN, Provenance
 
@@ -98,3 +101,44 @@ def get_dataset_detail(dataset_id: int) -> DatasetDetailResponse | None:
         if dataset.id == dataset_id:
             return dataset
     return None
+
+
+def filter_datasets(
+    *,
+    language: str | None = None,
+    source: str | None = None,
+    task: str | None = None,
+    data_format: str | None = None,
+) -> DatasetFilterResponse:
+    language_code = resolve_language_code(language) if language else None
+    task_code = resolve_task_filter(task.strip()) if task else None
+    source_slug = normalize_source_slug(source) if source else None
+    normalized_format = normalize_data_format(data_format) if data_format else None
+
+    filters = AppliedFiltersResponse(
+        language=language,
+        language_code=language_code,
+        source=source_slug,
+        task=task,
+        task_code=task_code,
+        data_format=normalized_format,
+    )
+
+    if language and language_code is None:
+        return DatasetFilterResponse(filters=filters, total=0, datasets=[])
+    if task and task_code is None:
+        return DatasetFilterResponse(filters=filters, total=0, datasets=[])
+
+    matches: list[DatasetSummaryResponse] = []
+    for dataset in _STUB_DATASETS:
+        if language_code and dataset.language.code != language_code:
+            continue
+        if source_slug and dataset.source.slug != source_slug:
+            continue
+        if normalized_format and dataset.data_format != normalized_format:
+            continue
+        if task_code and not any(item.code == task_code for item in dataset.tasks):
+            continue
+        matches.append(DatasetSummaryResponse.model_validate(dataset.model_dump()))
+
+    return DatasetFilterResponse(filters=filters, total=len(matches), datasets=matches)

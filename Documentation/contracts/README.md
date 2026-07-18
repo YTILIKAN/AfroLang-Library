@@ -5,7 +5,8 @@
 | Contrat | Fichier de référence | Implémentation |
 | --- | --- | --- |
 | Connecteur de source | [connector-contract.md](./connector-contract.md) | `backend-api/ingestion/connectors/` |
-| API `catalog` | [catalog-api.md](./catalog-api.md) | `backend-api/catalog/api_schemas.py` + bouchon `catalog/stub.py` |
+| API `catalog` (recherche + fiche) | [catalog-api.md](./catalog-api.md) | `backend-api/catalog/api_schemas.py` + bouchon `catalog/stub.py` |
+| API `catalog` (filtrage) | [catalog-filter-api.md](./catalog-filter-api.md) | `GET /catalog/datasets/filter` (Story 2.1) |
 
 ## Bouchon API catalog
 

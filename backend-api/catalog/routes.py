@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from catalog import stub as catalog_stub
-from catalog.api_schemas import DatasetDetailResponse, DatasetSearchResponse
+from catalog.api_schemas import DatasetDetailResponse, DatasetFilterResponse, DatasetSearchResponse
 from catalog.mappers import dataset_to_detail
 from catalog.service import CatalogService
 from core.config import Settings, get_settings
@@ -13,6 +13,19 @@ router = APIRouter(prefix="/catalog", tags=["catalog"])
 
 def get_catalog_service(session: Session = Depends(get_session)) -> CatalogService:
     return CatalogService(session)
+
+
+def _ensure_at_least_one_filter(
+    language: str | None,
+    source: str | None,
+    task: str | None,
+    data_format: str | None,
+) -> None:
+    if not any([language, source, task, data_format]):
+        raise HTTPException(
+            status_code=400,
+            detail="Au moins un filtre requis : language, source, task ou data_format.",
+        )
 
 
 @router.get(
@@ -32,6 +45,39 @@ def search_datasets_by_language(
     if settings.catalog_stub:
         return catalog_stub.search_by_language(language)
     return service.search_datasets_by_language(language)
+
+
+@router.get(
+    "/datasets/filter",
+    response_model=DatasetFilterResponse,
+    summary="Filtrer les datasets",
+    description=(
+        "Filtre combiné par langue (code ISO 639-3), source, tâche NLP (vocabulaire contrôlé) "
+        "et format de données. Story 2.1 — opère sur les valeurs normalisées (FR-12)."
+    ),
+)
+def filter_datasets(
+    language: str | None = Query(None, min_length=1, description="Code ou nom de langue"),
+    source: str | None = Query(None, min_length=1, description="Slug de la source (ex. huggingface)"),
+    task: str | None = Query(None, min_length=1, description="Code ou alias de tâche NLP"),
+    data_format: str | None = Query(None, min_length=1, description="Format normalisé (ex. text, audio)"),
+    settings: Settings = Depends(get_settings),
+    service: CatalogService = Depends(get_catalog_service),
+) -> DatasetFilterResponse:
+    _ensure_at_least_one_filter(language, source, task, data_format)
+    if settings.catalog_stub:
+        return catalog_stub.filter_datasets(
+            language=language,
+            source=source,
+            task=task,
+            data_format=data_format,
+        )
+    return service.filter_datasets(
+        language=language,
+        source=source,
+        task=task,
+        data_format=data_format,
+    )
 
 
 @router.get(
