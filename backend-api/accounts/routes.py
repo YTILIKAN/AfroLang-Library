@@ -4,10 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session
 
+from accounts.admin_service import AdminDatasetService
 from accounts import stub as accounts_stub
 from accounts.api_schemas import (
     AccountResponse,
     AdminAccountsResponse,
+    AdminDatasetCreateRequest,
+    AdminDatasetListResponse,
+    AdminDatasetUpdateRequest,
     LoginRequest,
     MessageResponse,
     MyDatasetsResponse,
@@ -16,6 +20,7 @@ from accounts.api_schemas import (
     TokenResponse,
     UpdateDatasetRequest,
 )
+from catalog.api_schemas import DatasetDetailResponse
 from accounts.service import AccountsService
 from core.config import Settings, get_settings
 from core.database import get_session
@@ -64,6 +69,18 @@ def get_current_account(
             updated_at=stub_account.created_at,
         )
     return service.resolve_account_from_token(token)
+
+
+def require_admin_account(
+    account: Account = Depends(get_current_account),
+    service: AccountsService = Depends(get_accounts_service),
+) -> Account:
+    service.require_role(account, AccountRole.ADMIN)
+    return account
+
+
+def get_admin_dataset_service(session: Session = Depends(get_session)) -> AdminDatasetService:
+    return AdminDatasetService(session)
 
 
 @router.post(
@@ -225,11 +242,10 @@ def delete_my_dataset(
     description="Gestion des comptes — implémentation complète en Story 4.2 (FR-20).",
 )
 def admin_list_accounts(
-    account: Account = Depends(get_current_account),
+    account: Account = Depends(require_admin_account),
     settings: Settings = Depends(get_settings),
     service: AccountsService = Depends(get_accounts_service),
 ) -> AdminAccountsResponse:
-    service.require_role(account, AccountRole.ADMIN)
     if settings.accounts_stub:
         return accounts_stub.admin_list_accounts()
     accounts = service.repository.list_accounts()
@@ -237,3 +253,96 @@ def admin_list_accounts(
         total=len(accounts),
         accounts=[service.get_me(item) for item in accounts],
     )
+
+
+@router.get(
+    "/admin/datasets",
+    response_model=AdminDatasetListResponse,
+    summary="Lister tous les datasets (Admin)",
+    description="Vue globale de l'index — toutes origines (FR-19, Story 4.1).",
+)
+def admin_list_datasets(
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_service: AdminDatasetService = Depends(get_admin_dataset_service),
+) -> AdminDatasetListResponse:
+    if settings.accounts_stub:
+        return accounts_stub.admin_list_datasets()
+    total, datasets = admin_service.list_datasets()
+    return AdminDatasetListResponse(total=total, datasets=datasets)
+
+
+@router.get(
+    "/admin/datasets/{dataset_id}",
+    response_model=DatasetDetailResponse,
+    summary="Fiche dataset (Admin)",
+)
+def admin_get_dataset(
+    dataset_id: int,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_service: AdminDatasetService = Depends(get_admin_dataset_service),
+) -> DatasetDetailResponse:
+    if settings.accounts_stub:
+        try:
+            return accounts_stub.admin_get_dataset(dataset_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return admin_service.get_dataset(dataset_id)
+
+
+@router.post(
+    "/admin/datasets",
+    response_model=DatasetDetailResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Ajouter un dataset (Admin)",
+)
+def admin_create_dataset(
+    payload: AdminDatasetCreateRequest,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_service: AdminDatasetService = Depends(get_admin_dataset_service),
+) -> DatasetDetailResponse:
+    if settings.accounts_stub:
+        return accounts_stub.admin_create_dataset(payload)
+    return admin_service.create_dataset(payload)
+
+
+@router.patch(
+    "/admin/datasets/{dataset_id}",
+    response_model=DatasetDetailResponse,
+    summary="Modifier un dataset (Admin)",
+)
+def admin_update_dataset(
+    dataset_id: int,
+    payload: AdminDatasetUpdateRequest,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_service: AdminDatasetService = Depends(get_admin_dataset_service),
+) -> DatasetDetailResponse:
+    if settings.accounts_stub:
+        try:
+            return accounts_stub.admin_update_dataset(dataset_id, payload)
+        except LookupError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return admin_service.update_dataset(dataset_id, payload)
+
+
+@router.delete(
+    "/admin/datasets/{dataset_id}",
+    response_model=MessageResponse,
+    summary="Supprimer un dataset (Admin)",
+)
+def admin_delete_dataset(
+    dataset_id: int,
+    account: Account = Depends(require_admin_account),
+    settings: Settings = Depends(get_settings),
+    admin_service: AdminDatasetService = Depends(get_admin_dataset_service),
+) -> MessageResponse:
+    if settings.accounts_stub:
+        try:
+            return accounts_stub.admin_delete_dataset(dataset_id)
+        except LookupError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    admin_service.delete_dataset(dataset_id)
+    return MessageResponse(detail="Dataset supprimé")

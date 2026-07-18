@@ -3,11 +3,16 @@ from datetime import datetime, timedelta, timezone
 from accounts.api_schemas import (
     AccountResponse,
     AdminAccountsResponse,
+    AdminDatasetCreateRequest,
+    AdminDatasetListResponse,
+    AdminDatasetUpdateRequest,
     MessageResponse,
     MyDatasetsResponse,
     SubmitDatasetRequest,
     TokenResponse,
 )
+from catalog.api_schemas import DatasetDetailResponse, DatasetSummaryResponse
+from catalog import stub as catalog_stub
 from accounts.auth import hash_password
 from core.models import AccountRole
 
@@ -152,3 +157,89 @@ def admin_list_accounts() -> AdminAccountsResponse:
     _ensure_stub_accounts()
     accounts = [_account_response(email, data) for email, data in _STUB_ACCOUNTS.items()]
     return AdminAccountsResponse(total=len(accounts), accounts=accounts)
+
+
+_STUB_ADMIN_DATASETS: list[DatasetDetailResponse] = []
+_STUB_ADMIN_NEXT_ID = 10_000
+
+
+def _ensure_admin_datasets() -> None:
+    global _STUB_ADMIN_NEXT_ID
+    if _STUB_ADMIN_DATASETS:
+        return
+    _STUB_ADMIN_DATASETS.extend(catalog_stub.list_all_datasets())
+    _STUB_ADMIN_NEXT_ID = max(dataset.id for dataset in _STUB_ADMIN_DATASETS) + 1
+
+
+def admin_list_datasets() -> AdminDatasetListResponse:
+    _ensure_admin_datasets()
+    summaries = [
+        DatasetSummaryResponse(**dataset.model_dump(exclude={"created_at", "updated_at"}))
+        for dataset in _STUB_ADMIN_DATASETS
+    ]
+    return AdminDatasetListResponse(total=len(summaries), datasets=summaries)
+
+
+def admin_get_dataset(dataset_id: int) -> DatasetDetailResponse:
+    _ensure_admin_datasets()
+    for dataset in _STUB_ADMIN_DATASETS:
+        if dataset.id == dataset_id:
+            return dataset
+    raise LookupError("Dataset introuvable")
+
+
+def admin_create_dataset(payload: AdminDatasetCreateRequest) -> DatasetDetailResponse:
+    global _STUB_ADMIN_NEXT_ID
+    _ensure_admin_datasets()
+    from catalog.api_schemas import LanguageResponse, SourceResponse, TaskResponse
+
+    dataset = DatasetDetailResponse(
+        id=_STUB_ADMIN_NEXT_ID,
+        external_id=payload.external_id or f"manual/{_STUB_ADMIN_NEXT_ID}",
+        title=payload.title,
+        description=payload.description or "inconnu",
+        language=LanguageResponse(code=payload.language[:3], name=payload.language, family="inconnu", region="inconnu"),
+        language_raw=payload.language_raw or payload.language,
+        source=SourceResponse(slug=payload.source_slug, name=payload.source_name or payload.source_slug, base_url="inconnu"),
+        license=None,
+        provenance=payload.provenance.value,
+        data_format=payload.data_format or "inconnu",
+        size=payload.size or "inconnu",
+        source_url=payload.source_url,
+        tasks=[TaskResponse(code=payload.task, label=payload.task.upper())],
+        published_at=payload.published_at,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    )
+    _STUB_ADMIN_NEXT_ID += 1
+    _STUB_ADMIN_DATASETS.append(dataset)
+    return dataset
+
+
+def admin_update_dataset(dataset_id: int, payload: AdminDatasetUpdateRequest) -> DatasetDetailResponse:
+    _ensure_admin_datasets()
+    for index, dataset in enumerate(_STUB_ADMIN_DATASETS):
+        if dataset.id != dataset_id:
+            continue
+        updates = payload.model_dump(exclude_unset=True)
+        if "title" in updates:
+            dataset = dataset.model_copy(update={"title": updates["title"]})
+        if "description" in updates:
+            dataset = dataset.model_copy(update={"description": updates["description"]})
+        if "source_url" in updates:
+            dataset = dataset.model_copy(update={"source_url": updates["source_url"]})
+        if "provenance" in updates and updates["provenance"] is not None:
+            dataset = dataset.model_copy(update={"provenance": updates["provenance"].value})
+        dataset = dataset.model_copy(update={"updated_at": datetime.now(timezone.utc)})
+        _STUB_ADMIN_DATASETS[index] = dataset
+        return dataset
+    raise LookupError("Dataset introuvable")
+
+
+def admin_delete_dataset(dataset_id: int) -> MessageResponse:
+    _ensure_admin_datasets()
+    for index, dataset in enumerate(_STUB_ADMIN_DATASETS):
+        if dataset.id == dataset_id:
+            _STUB_ADMIN_DATASETS.pop(index)
+            return MessageResponse(detail="Dataset supprimé")
+    raise LookupError("Dataset introuvable")

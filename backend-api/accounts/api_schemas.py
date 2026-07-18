@@ -2,7 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
-from core.models import AccountRole
+from catalog.api_schemas import DatasetSummaryResponse
+from core.models import AccountRole, Provenance
 
 
 class RegisterRequest(BaseModel):
@@ -57,6 +58,50 @@ class MyDatasetsResponse(BaseModel):
 class AdminAccountsResponse(BaseModel):
     total: int
     accounts: list[AccountResponse]
+
+
+class AdminDatasetListResponse(BaseModel):
+    total: int
+    datasets: list[DatasetSummaryResponse]
+
+
+class AdminDatasetCreateRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=500)
+    source_url: str = Field(min_length=1)
+    language: str = Field(min_length=1)
+    task: str = Field(min_length=1)
+    external_id: str | None = None
+    source_slug: str = "manual"
+    source_name: str | None = None
+    source_base_url: str | None = None
+    language_raw: str | None = None
+    description: str | None = None
+    provenance: Provenance = Provenance.MANUEL
+    data_format: str | None = None
+    size: str | None = None
+    license_name: str | None = None
+    license_spdx_id: str | None = None
+    license_url: str | None = None
+    contributor_account_id: int | None = None
+    published_at: datetime | None = None
+
+
+class AdminDatasetUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=500)
+    source_url: str | None = None
+    language: str | None = None
+    language_raw: str | None = None
+    task: str | None = None
+    description: str | None = None
+    provenance: Provenance | None = None
+    source_slug: str | None = None
+    source_name: str | None = None
+    data_format: str | None = None
+    size: str | None = None
+    license_name: str | None = None
+    license_spdx_id: str | None = None
+    license_url: str | None = None
+    contributor_account_id: int | None = None
 
 
 class MessageResponse(BaseModel):

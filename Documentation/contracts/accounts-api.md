@@ -143,6 +143,20 @@ Sessions d'authentification : table privée `account_session` dans `accounts/mod
 
 ---
 
+## Administration des datasets (Story 4.1 — FR-19)
+
+Contrat détaillé : [accounts-admin-datasets-api.md](./accounts-admin-datasets-api.md)
+
+| Méthode | Chemin | Rôle |
+| --- | --- | --- |
+| GET | `/accounts/admin/datasets` | Admin |
+| GET | `/accounts/admin/datasets/{id}` | Admin |
+| POST | `/accounts/admin/datasets` | Admin |
+| PATCH | `/accounts/admin/datasets/{id}` | Admin |
+| DELETE | `/accounts/admin/datasets/{id}` | Admin |
+
+---
+
 ## Erreurs courantes
 
 | Code | Cas |
