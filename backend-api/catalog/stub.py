@@ -6,6 +6,8 @@ from catalog.api_schemas import (
     DatasetFilterResponse,
     DatasetSearchResponse,
     DatasetSummaryResponse,
+    LanguageAggregationStats,
+    LanguageOverviewResponse,
     LanguageResponse,
     LicenseResponse,
     SourceResponse,
@@ -142,3 +144,40 @@ def filter_datasets(
         matches.append(DatasetSummaryResponse.model_validate(dataset.model_dump()))
 
     return DatasetFilterResponse(filters=filters, total=len(matches), datasets=matches)
+
+
+def get_language_overview(language_query: str) -> LanguageOverviewResponse:
+    search = search_by_language(language_query)
+    if search.language_code == UNKNOWN:
+        return LanguageOverviewResponse(
+            language_query=language_query,
+            language_code=UNKNOWN,
+            language=None,
+            stats=LanguageAggregationStats(dataset_count=0, task_count=0, tasks_covered=[]),
+            datasets=[],
+        )
+
+    language_meta: LanguageResponse | None = None
+    for dataset in _STUB_DATASETS:
+        if dataset.language.code == search.language_code:
+            language_meta = dataset.language
+            break
+
+    tasks_by_code: dict[str, TaskResponse] = {}
+    for dataset in search.datasets:
+        for task in dataset.tasks:
+            tasks_by_code[task.code] = task
+
+    tasks_covered = [tasks_by_code[code] for code in sorted(tasks_by_code)]
+
+    return LanguageOverviewResponse(
+        language_query=language_query,
+        language_code=search.language_code,
+        language=language_meta,
+        stats=LanguageAggregationStats(
+            dataset_count=len(search.datasets),
+            task_count=len(tasks_covered),
+            tasks_covered=tasks_covered,
+        ),
+        datasets=search.datasets,
+    )

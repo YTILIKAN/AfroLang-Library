@@ -7,6 +7,7 @@
 | Connecteur de source | [connector-contract.md](./connector-contract.md) | `backend-api/ingestion/connectors/` |
 | API `catalog` (recherche + fiche) | [catalog-api.md](./catalog-api.md) | `backend-api/catalog/api_schemas.py` + bouchon `catalog/stub.py` |
 | API `catalog` (filtrage) | [catalog-filter-api.md](./catalog-filter-api.md) | `GET /catalog/datasets/filter` (Story 2.1) |
+| API `catalog` (agrégation par langue) | [catalog-language-api.md](./catalog-language-api.md) | `GET /catalog/languages/overview` (Story 2.2) |
 
 ## Bouchon API catalog
 

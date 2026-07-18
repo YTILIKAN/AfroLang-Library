@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session
 
 from catalog import stub as catalog_stub
-from catalog.api_schemas import DatasetDetailResponse, DatasetFilterResponse, DatasetSearchResponse
+from catalog.api_schemas import (
+    DatasetDetailResponse,
+    DatasetFilterResponse,
+    DatasetSearchResponse,
+    LanguageOverviewResponse,
+)
 from catalog.mappers import dataset_to_detail
 from catalog.service import CatalogService
 from core.config import Settings, get_settings
@@ -45,6 +50,25 @@ def search_datasets_by_language(
     if settings.catalog_stub:
         return catalog_stub.search_by_language(language)
     return service.search_datasets_by_language(language)
+
+
+@router.get(
+    "/languages/overview",
+    response_model=LanguageOverviewResponse,
+    summary="Agrégation par langue",
+    description=(
+        "Retourne les datasets d'une langue et des compteurs basiques "
+        "(nombre de datasets, tâches NLP couvertes). Story 2.2 — FR-14."
+    ),
+)
+def get_language_overview(
+    language: str = Query(..., min_length=1, description="Code ou nom de langue"),
+    settings: Settings = Depends(get_settings),
+    service: CatalogService = Depends(get_catalog_service),
+) -> LanguageOverviewResponse:
+    if settings.catalog_stub:
+        return catalog_stub.get_language_overview(language)
+    return service.get_language_overview(language)
 
 
 @router.get(

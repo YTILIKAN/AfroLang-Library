@@ -79,3 +79,21 @@ class DatasetFilterResponse(BaseModel):
     filters: AppliedFiltersResponse
     total: int
     datasets: list[DatasetSummaryResponse]
+
+
+class LanguageAggregationStats(BaseModel):
+    """Compteurs basiques pour une langue (FR-14)."""
+
+    dataset_count: int = Field(description="Nombre de datasets référencés pour la langue")
+    task_count: int = Field(description="Nombre de tâches NLP distinctes couvertes")
+    tasks_covered: list[TaskResponse] = Field(default_factory=list, description="Tâches NLP disponibles")
+
+
+class LanguageOverviewResponse(BaseModel):
+    """Réponse de GET /catalog/languages/overview (Story 2.2)."""
+
+    language_query: str = Field(description="Paramètre langue tel que reçu")
+    language_code: str = Field(description="Code canonique ISO 639-3 résolu")
+    language: LanguageResponse | None = Field(default=None, description="Métadonnées de la langue")
+    stats: LanguageAggregationStats
+    datasets: list[DatasetSummaryResponse]

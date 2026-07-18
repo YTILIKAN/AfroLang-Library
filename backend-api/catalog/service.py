@@ -1,6 +1,14 @@
 from sqlmodel import Session
 
-from catalog.api_schemas import AppliedFiltersResponse, DatasetFilterResponse, DatasetSearchResponse
+from catalog.api_schemas import (
+    AppliedFiltersResponse,
+    DatasetFilterResponse,
+    DatasetSearchResponse,
+    LanguageAggregationStats,
+    LanguageOverviewResponse,
+    LanguageResponse,
+    TaskResponse,
+)
 from catalog.filter_params import (
     ResolvedFilters,
     normalize_data_format,
@@ -51,6 +59,53 @@ class CatalogService:
             total=len(datasets),
             datasets=[dataset_to_summary(dataset) for dataset in datasets],
         )
+
+    def get_language_overview(self, language_query: str) -> LanguageOverviewResponse:
+        """Agrégation par langue : datasets + compteurs (FR-14)."""
+        language_code = self.repository.resolve_language_code(language_query)
+        if language_code is None:
+            return LanguageOverviewResponse(
+                language_query=language_query,
+                language_code=UNKNOWN,
+                language=None,
+                stats=LanguageAggregationStats(dataset_count=0, task_count=0, tasks_covered=[]),
+                datasets=[],
+            )
+
+        language = self.repository.get_language(language_code)
+        datasets = self.repository.list_datasets_by_language(language_code)
+        summaries = [dataset_to_summary(dataset) for dataset in datasets]
+        tasks_covered = self._collect_tasks_covered(datasets)
+
+        language_response = None
+        if language is not None:
+            language_response = LanguageResponse(
+                code=language.code,
+                name=language.name,
+                family=language.family,
+                region=language.region,
+            )
+
+        return LanguageOverviewResponse(
+            language_query=language_query,
+            language_code=language_code,
+            language=language_response,
+            stats=LanguageAggregationStats(
+                dataset_count=len(summaries),
+                task_count=len(tasks_covered),
+                tasks_covered=tasks_covered,
+            ),
+            datasets=summaries,
+        )
+
+    @staticmethod
+    def _collect_tasks_covered(datasets: list[Dataset]) -> list[TaskResponse]:
+        tasks_by_code: dict[str, TaskResponse] = {}
+        for dataset in datasets:
+            for task in dataset.tasks:
+                if task.code not in tasks_by_code:
+                    tasks_by_code[task.code] = TaskResponse(code=task.code, label=task.label)
+        return [tasks_by_code[code] for code in sorted(tasks_by_code)]
 
     def filter_datasets(
         self,
