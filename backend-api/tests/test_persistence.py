@@ -99,6 +99,7 @@ def test_storage_contains_metadata_only(session: Session) -> None:
         "task_tags_raw",
         "license_id",
         "provenance",
+        "contributor_account_id",
         "data_format",
         "size",
         "source_url",

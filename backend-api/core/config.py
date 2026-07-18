@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     catalog_stub: bool = False
     catalog_auto_seed: bool = True
+    accounts_stub: bool = False
+    auth_secret_key: str = "dev-change-me-in-production"
+    auth_token_ttl_hours: int = 24
 
 
 @lru_cache

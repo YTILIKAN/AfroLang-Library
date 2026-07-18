@@ -4,6 +4,7 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from core.config import get_settings
 from core import models  # noqa: F401 — enregistre les tables partagées
+import accounts.models  # noqa: F401 — tables privées accounts
 from core.fts import init_fts5
 
 settings = get_settings()

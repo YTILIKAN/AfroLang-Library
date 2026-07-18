@@ -9,6 +9,7 @@
 | API `catalog` (filtrage) | [catalog-filter-api.md](./catalog-filter-api.md) | `GET /catalog/datasets/filter` (Story 2.1) |
 | API `catalog` (agrégation par langue) | [catalog-language-api.md](./catalog-language-api.md) | `GET /catalog/languages/overview` (Story 2.2) |
 | **API publique v1** | [catalog-public-api.md](./catalog-public-api.md) | `/api/v1/*` (Story 2.3, FR-15) |
+| **API `accounts`** | [accounts-api.md](./accounts-api.md) | `/accounts/*` (Story 3.1, FR-16) |
 
 ## Bouchon API catalog
 
@@ -34,6 +35,27 @@ curl "http://127.0.0.1:8000/api/v1"
 ```
 
 Documentation interactive : http://127.0.0.1:8000/docs
+
+## Bouchon API accounts
+
+Par défaut, l'authentification utilise l'**implémentation réelle** (`ACCOUNTS_STUB=false`) avec persistance SQLite.
+
+Pour le bouchon (frontend sans logique métier contribution) :
+
+```env
+ACCOUNTS_STUB=true
+```
+
+```powershell
+# Inscription / connexion
+curl -X POST http://127.0.0.1:8000/accounts/auth/register `
+  -H "Content-Type: application/json" `
+  -d '{"email":"user@example.com","password":"password123","display_name":"User"}'
+
+curl -X POST http://127.0.0.1:8000/accounts/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"kofi@example.com","password":"password123"}'
+```
 
 ## Basculer vers l'API réelle
 
