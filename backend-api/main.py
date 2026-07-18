@@ -5,6 +5,7 @@ from sqlmodel import Session
 
 from catalog.routes import PUBLIC_API_VERSION, catalog_router, public_router
 from catalog.seed import seed_catalog_if_empty
+from accounts.routes import router as accounts_router
 from core.config import get_settings
 from core.database import engine, init_db
 from core.logging import setup_logging
@@ -48,10 +49,15 @@ def create_app() -> FastAPI:
                 "description": "Alias interne des routes public-api sous `/catalog`.",
             },
             {"name": "health", "description": "Santé du service."},
+            {
+                "name": "accounts",
+                "description": "Comptes, authentification et surface d'écriture authentifiée (FR-16).",
+            },
         ],
     )
     app.include_router(public_router, prefix="/api/v1")
     app.include_router(catalog_router, prefix="/catalog")
+    app.include_router(accounts_router)
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:

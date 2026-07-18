@@ -49,6 +49,15 @@ class CatalogRepository:
         )
         return list(self.session.exec(statement).all())
 
+    def list_all_datasets(self) -> list[Dataset]:
+        statement = select(Dataset).options(
+            selectinload(Dataset.source),
+            selectinload(Dataset.language),
+            selectinload(Dataset.license),
+            selectinload(Dataset.tasks),
+        )
+        return list(self.session.exec(statement).all())
+
     def filter_datasets(
         self,
         *,
