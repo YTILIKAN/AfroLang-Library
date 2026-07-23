@@ -8,9 +8,9 @@ from accounts.admin_repository import AdminDatasetRepository
 from accounts.api_schemas import AdminDatasetCreateRequest, AdminDatasetUpdateRequest
 from catalog.api_schemas import DatasetDetailResponse, DatasetSummaryResponse
 from catalog.filter_params import normalize_data_format, normalize_source_slug, resolve_task_filter
-from catalog.language_resolver import resolve_language_code
 from catalog.mappers import dataset_to_detail, dataset_to_summary
 from catalog.service import CatalogService
+from core.language_codes import resolve_language_code
 from core.models import Language, Provenance, UNKNOWN
 from core.schemas import DatasetInput, LanguageInput, LicenseInput, SourceInput
 from ingestion.service import IngestionService
