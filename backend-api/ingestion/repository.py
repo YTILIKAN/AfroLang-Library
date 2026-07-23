@@ -2,8 +2,9 @@ from sqlalchemy import text
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
-from core.models import Dataset, DatasetTaskLink, Language, License, Source, Task, utc_now
+from core.models import Dataset, DatasetTaskLink, Language, License, Provenance, Source, Task, utc_now
 from core.schemas import DatasetInput, LanguageInput, LicenseInput, SourceInput, TaskInput
+from ingestion.models import SyncLog
 from ingestion.normalization.vocabulary import get_task_label
 
 
@@ -27,7 +28,7 @@ class IngestionRepository:
             language.name = payload.name
             language.family = payload.family
             language.region = payload.region
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(language)
         return language
 
@@ -40,7 +41,7 @@ class IngestionRepository:
         else:
             source.name = payload.name
             source.base_url = payload.base_url
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(source)
         return source
 
@@ -52,7 +53,7 @@ class IngestionRepository:
             self.session.add(task)
         else:
             task.label = payload.label
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(task)
         return task
 
@@ -70,11 +71,12 @@ class IngestionRepository:
         else:
             license_.name = payload.name
             license_.url = payload.url
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(license_)
         return license_
 
-    def save_dataset(self, payload: DatasetInput) -> Dataset:
+    def save_dataset_no_commit(self, payload: DatasetInput) -> Dataset:
+        """Écrit un dataset sans committer — pour permettre l'écriture atomique d'un batch (AD-11, Story 1.8)."""
         source = self.upsert_source(payload.source)
         language = self.upsert_language(payload.language)
         license_ = self.upsert_license(payload.license) if payload.license else self.upsert_license(LicenseInput())
@@ -125,13 +127,87 @@ class IngestionRepository:
             dataset.published_at = payload.published_at
             dataset.updated_at = now
 
-        self.session.commit()
+        self.session.flush()
         self.session.refresh(dataset)
 
         self._replace_dataset_tasks(dataset.id, tasks)
         self._sync_dataset_fts(dataset)
+        return dataset
+
+    def save_dataset(self, payload: DatasetInput) -> Dataset:
+        """Écrit un dataset isolément, dans sa propre transaction (usage : contribution ad-hoc, seed, tests)."""
+        dataset = self.save_dataset_no_commit(payload)
         self.session.commit()
         return self._load_dataset(dataset.id)
+
+    def write_batch(
+        self,
+        payloads: list[DatasetInput],
+        *,
+        remove_dataset_ids: list[int] | None = None,
+    ) -> list[Dataset]:
+        """
+        Écrit tout un batch de datasets (et retire les ids indiqués) dans une seule
+        transaction (AD-11, Story 1.8/1.9).
+
+        Soit le batch entier (ajouts + retraits) devient visible d'un coup (un seul
+        commit final), soit rien n'est visible (rollback complet) — jamais un état partiel.
+        """
+        try:
+            saved = [self.save_dataset_no_commit(payload) for payload in payloads]
+            if remove_dataset_ids:
+                self.remove_datasets(remove_dataset_ids)
+            self.session.commit()
+        except Exception:
+            self.session.rollback()
+            raise
+        return [self._load_dataset(dataset.id) for dataset in saved]
+
+    def list_synced_datasets(self, source_slug: str) -> dict[str, int]:
+        """external_id -> id, pour les datasets `synchronisé` de cette source (AD-15, Story 1.9)."""
+        source_statement = select(Source).where(Source.slug == source_slug)
+        source = self.session.exec(source_statement).first()
+        if source is None:
+            return {}
+
+        statement = select(Dataset.external_id, Dataset.id).where(
+            Dataset.source_id == source.id,
+            Dataset.provenance == Provenance.SYNCHRONISE,
+        )
+        return {external_id: dataset_id for external_id, dataset_id in self.session.exec(statement).all()}
+
+    def remove_datasets(self, dataset_ids: list[int]) -> None:
+        """Retire des datasets (liens tâches + ligne + entrée FTS), sans commit interne (Story 1.9)."""
+        if not dataset_ids:
+            return
+
+        is_sqlite = self.session.bind is not None and self.session.bind.dialect.name == "sqlite"
+
+        for dataset_id in dataset_ids:
+            links = self.session.exec(
+                select(DatasetTaskLink).where(DatasetTaskLink.dataset_id == dataset_id)
+            ).all()
+            for link in links:
+                self.session.delete(link)
+
+            if is_sqlite:
+                self.session.execute(
+                    text("DELETE FROM dataset_fts WHERE dataset_id = :dataset_id"),
+                    {"dataset_id": dataset_id},
+                )
+
+            dataset = self.session.get(Dataset, dataset_id)
+            if dataset is not None:
+                self.session.delete(dataset)
+
+        self.session.flush()
+
+    def record_sync_log(self, entry: SyncLog) -> SyncLog:
+        """Enregistre la trace d'une exécution d'ingestion, dans sa propre transaction (AD-13, Story 1.10)."""
+        self.session.add(entry)
+        self.session.commit()
+        self.session.refresh(entry)
+        return entry
 
     def _load_dataset(self, dataset_id: int) -> Dataset:
         statement = (
@@ -155,7 +231,7 @@ class IngestionRepository:
 
         for task in tasks:
             self.session.add(DatasetTaskLink(dataset_id=dataset_id, task_id=task.id))
-        self.session.commit()
+        self.session.flush()
 
     def _sync_dataset_fts(self, dataset: Dataset) -> None:
         if self.session.bind is None or self.session.bind.dialect.name != "sqlite":
