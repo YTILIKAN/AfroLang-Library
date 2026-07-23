@@ -14,8 +14,34 @@ class Provenance(str, Enum):
     MANUEL = "manuel"
 
 
+class AccountRole(str, Enum):
+    CHERCHEUR = "chercheur"
+    ADMIN = "admin"
+
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class Account(SQLModel, table=True):
+    __tablename__ = "account"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(unique=True, index=True, max_length=320)
+    display_name: str = Field(max_length=120)
+    password_hash: str
+    role: AccountRole = Field(default=AccountRole.CHERCHEUR, index=True)
+    is_active: bool = Field(default=True, index=True)
+    created_at: datetime = Field(
+        default_factory=utc_now,
+        sa_column=Column(DateTime(timezone=True)),
+    )
+    updated_at: datetime = Field(
+        default_factory=utc_now,
+        sa_column=Column(DateTime(timezone=True)),
+    )
+
+    contributed_datasets: list["Dataset"] = Relationship(back_populates="contributor")
 
 
 class Language(SQLModel, table=True):
@@ -82,6 +108,12 @@ class Dataset(SQLModel, table=True):
     task_tags_raw: str = Field(default=UNKNOWN, description="Tags de tâche bruts d'origine pour traçabilité")
     license_id: Optional[int] = Field(default=None, foreign_key="license.id")
     provenance: Provenance = Field(index=True)
+    contributor_account_id: Optional[int] = Field(
+        default=None,
+        foreign_key="account.id",
+        index=True,
+        description="Compte contributeur si origine contribué ou manuel",
+    )
     data_format: str = Field(default=UNKNOWN)
     size: str = Field(default=UNKNOWN)
     source_url: str = Field(description="Lien de redirection vers la source — jamais le contenu du dataset")
@@ -101,4 +133,5 @@ class Dataset(SQLModel, table=True):
     source: Source = Relationship(back_populates="datasets")
     language: Language = Relationship(back_populates="datasets")
     license: Optional[License] = Relationship(back_populates="datasets")
+    contributor: Optional[Account] = Relationship(back_populates="contributed_datasets")
     tasks: list[Task] = Relationship(back_populates="datasets", link_model=DatasetTaskLink)

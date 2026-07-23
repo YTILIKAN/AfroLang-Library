@@ -1,9 +1,9 @@
 from sqlalchemy import text
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
-
 from core.language_codes import resolve_language_code
-from core.models import Dataset, Language, Source
+from core.models import Dataset, DatasetTaskLink, Language, Source, Task
+
 
 
 class CatalogRepository:
@@ -47,6 +47,46 @@ class CatalogRepository:
                 selectinload(Dataset.tasks),
             )
         )
+        return list(self.session.exec(statement).all())
+
+    def list_all_datasets(self) -> list[Dataset]:
+        statement = select(Dataset).options(
+            selectinload(Dataset.source),
+            selectinload(Dataset.language),
+            selectinload(Dataset.license),
+            selectinload(Dataset.tasks),
+        )
+        return list(self.session.exec(statement).all())
+
+    def filter_datasets(
+        self,
+        *,
+        language_code: str | None = None,
+        source_slug: str | None = None,
+        task_code: str | None = None,
+        data_format: str | None = None,
+    ) -> list[Dataset]:
+        statement = select(Dataset).options(
+            selectinload(Dataset.source),
+            selectinload(Dataset.language),
+            selectinload(Dataset.license),
+            selectinload(Dataset.tasks),
+        )
+
+        if language_code is not None:
+            statement = statement.where(Dataset.language_code == language_code)
+        if source_slug is not None:
+            statement = statement.join(Source).where(Source.slug == source_slug)
+        if data_format is not None:
+            statement = statement.where(Dataset.data_format == data_format)
+        if task_code is not None:
+            task_subquery = (
+                select(DatasetTaskLink.dataset_id)
+                .join(Task)
+                .where(Task.code == task_code)
+            )
+            statement = statement.where(Dataset.id.in_(task_subquery))
+
         return list(self.session.exec(statement).all())
 
     def get_language(self, code: str) -> Language | None:
