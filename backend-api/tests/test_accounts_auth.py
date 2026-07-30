@@ -120,7 +120,7 @@ def test_catalog_remains_public_without_account(accounts_client: TestClient) -> 
     assert response.status_code == 200
 
 
-def test_contribution_returns_501_without_stub(accounts_client: TestClient) -> None:
+def test_contribution_persists_without_stub(accounts_client: TestClient) -> None:
     _register(accounts_client)
     token = _login(accounts_client)
 
@@ -134,7 +134,14 @@ def test_contribution_returns_501_without_stub(accounts_client: TestClient) -> N
             "task": "asr",
         },
     )
-    assert response.status_code == 501
+    assert response.status_code == 201
+    body = response.json()
+    assert body["provenance"] == "contribué"
+    assert body["title"] == "Test Dataset"
+
+    mine = accounts_client.get("/accounts/datasets/mine", headers={"Authorization": f"Bearer {token}"})
+    assert mine.status_code == 200
+    assert mine.json()["total"] == 1
 
 
 def test_stub_login_and_contribution(stub_accounts) -> None:

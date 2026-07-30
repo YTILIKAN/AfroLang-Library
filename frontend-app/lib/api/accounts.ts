@@ -10,7 +10,7 @@ import {
   RegisterInput,
   SubmitDatasetInput,
   SubmitDatasetResult,
-  MyContribution,
+  DatasetSummary,
   MyDatasetsResponse,
   UpdateMyDatasetInput,
   TokenResponse,
@@ -54,8 +54,8 @@ export function listMyDatasets(): Promise<MyDatasetsResponse> {
   return apiRequest<MyDatasetsResponse>("/accounts/datasets/mine", { auth: true });
 }
 
-export function updateMyDataset(id: number, input: UpdateMyDatasetInput): Promise<MyContribution> {
-  return apiRequest<MyContribution>(`/accounts/datasets/${id}`, {
+export function updateMyDataset(id: number, input: UpdateMyDatasetInput): Promise<DatasetDetail> {
+  return apiRequest<DatasetDetail>(`/accounts/datasets/${id}`, {
     method: "PATCH",
     auth: true,
     body: input,

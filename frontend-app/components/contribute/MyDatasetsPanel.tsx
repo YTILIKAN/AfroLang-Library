@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/styles";
 import { deleteMyDataset, listMyDatasets, updateMyDataset } from "@/lib/api/accounts";
 import { ApiError } from "@/lib/api/client";
-import { MyContribution } from "@/lib/types";
+import { DatasetSummary } from "@/lib/types";
 
 export function MyDatasetsPanel() {
-  const [datasets, setDatasets] = useState<MyContribution[]>([]);
+  const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -65,7 +65,7 @@ export function MyDatasetsPanel() {
     };
   }, []);
 
-  function startEdit(dataset: MyContribution) {
+  function startEdit(dataset: DatasetSummary) {
     setEditingId(dataset.id);
     setEditTitle(dataset.title);
   }
@@ -90,7 +90,7 @@ export function MyDatasetsPanel() {
     }
   }
 
-  async function handleDelete(dataset: MyContribution) {
+  async function handleDelete(dataset: DatasetSummary) {
     const confirmed = window.confirm(`Retirer « ${dataset.title} » de vos contributions ?`);
     if (!confirmed) {
       return;
@@ -183,7 +183,7 @@ export function MyDatasetsPanel() {
                         <span className="font-serif text-sm font-medium text-ink-black">{dataset.title}</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-serif text-sm text-graphite">{dataset.language_code}</td>
+                    <td className="px-4 py-3 font-serif text-sm text-graphite">{dataset.language.code}</td>
                     <td className="px-4 py-3 font-serif text-sm text-graphite">
                       {dataset.tasks.map((task) => task.label).join(", ") || "inconnu"}
                     </td>

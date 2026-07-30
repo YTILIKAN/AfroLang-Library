@@ -6,6 +6,7 @@ from sqlmodel import Session
 
 from accounts.admin_account_service import AdminAccountService
 from accounts.admin_service import AdminDatasetService
+from accounts.contributor_service import ContributorDatasetService
 from accounts import stub as accounts_stub
 from accounts.api_schemas import (
     AccountResponse,
@@ -90,6 +91,10 @@ def get_admin_account_service(session: Session = Depends(get_session)) -> AdminA
     return AdminAccountService(session)
 
 
+def get_contributor_dataset_service(session: Session = Depends(get_session)) -> ContributorDatasetService:
+    return ContributorDatasetService(session)
+
+
 @router.post(
     "/auth/register",
     response_model=AccountResponse,
@@ -167,81 +172,77 @@ def get_me(
 
 @router.post(
     "/datasets",
+    response_model=DatasetDetailResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Soumettre un dataset (bouchon)",
-    description="Contrat de contribution — implémentation complète en Story 3.2 (FR-17).",
+    summary="Soumettre un dataset",
+    description="Contribution chercheur — normalisation et provenance `contribué` (FR-17, Story 3.2).",
 )
 def submit_dataset(
     payload: SubmitDatasetRequest,
     account: Account = Depends(get_current_account),
     settings: Settings = Depends(get_settings),
-) -> dict:
+    contributor_service: ContributorDatasetService = Depends(get_contributor_dataset_service),
+) -> DatasetDetailResponse:
     if settings.accounts_stub:
         return accounts_stub.submit_dataset(account.id, payload)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Contribution réelle disponible en Story 3.2",
-    )
+    return contributor_service.submit(account, payload)
 
 
 @router.get(
     "/datasets/mine",
     response_model=MyDatasetsResponse,
-    summary="Mes datasets (bouchon)",
-    description="Liste des contributions du chercheur — Story 3.3 pour l'implémentation réelle.",
+    summary="Mes datasets",
+    description="Liste des contributions du chercheur connecté (FR-18, Story 3.3).",
 )
 def list_my_datasets(
     account: Account = Depends(get_current_account),
     settings: Settings = Depends(get_settings),
+    contributor_service: ContributorDatasetService = Depends(get_contributor_dataset_service),
 ) -> MyDatasetsResponse:
     if settings.accounts_stub:
         return accounts_stub.list_my_datasets(account.id)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Gestion des contributions disponible en Story 3.3",
-    )
+    total, datasets = contributor_service.list_mine(account)
+    return MyDatasetsResponse(total=total, datasets=datasets)
 
 
 @router.patch(
     "/datasets/{dataset_id}",
-    summary="Modifier ma contribution (bouchon)",
+    response_model=DatasetDetailResponse,
+    summary="Modifier ma contribution",
 )
 def update_my_dataset(
     dataset_id: int,
     payload: UpdateDatasetRequest,
     account: Account = Depends(get_current_account),
     settings: Settings = Depends(get_settings),
-) -> dict:
+    contributor_service: ContributorDatasetService = Depends(get_contributor_dataset_service),
+) -> DatasetDetailResponse:
     if settings.accounts_stub:
         try:
             return accounts_stub.update_my_dataset(account.id, dataset_id, payload.title)
         except LookupError as exc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Modification disponible en Story 3.3",
-    )
+    return contributor_service.update_mine(account, dataset_id, payload)
 
 
 @router.delete(
     "/datasets/{dataset_id}",
     response_model=MessageResponse,
-    summary="Supprimer ma contribution (bouchon)",
+    summary="Supprimer ma contribution",
 )
 def delete_my_dataset(
     dataset_id: int,
     account: Account = Depends(get_current_account),
     settings: Settings = Depends(get_settings),
+    contributor_service: ContributorDatasetService = Depends(get_contributor_dataset_service),
 ) -> MessageResponse:
     if settings.accounts_stub:
         try:
             return accounts_stub.delete_my_dataset(account.id, dataset_id)
         except LookupError as exc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Suppression disponible en Story 3.3",
-    )
+    contributor_service.delete_mine(account, dataset_id)
+    return MessageResponse(detail="Dataset supprimé")
 
 
 @router.get(

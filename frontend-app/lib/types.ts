@@ -112,29 +112,11 @@ export interface SubmitDatasetInput {
   size?: string;
 }
 
-export interface SubmitDatasetResult {
-  id: number;
-  title: string;
-  language_code: string;
-  source_url: string;
-  provenance: Provenance;
-  tasks: TaskInfo[];
-  description: string;
-}
-
-export interface MyContribution {
-  id: number;
-  title: string;
-  language_code: string;
-  source_url: string;
-  provenance: Provenance;
-  tasks: TaskInfo[];
-  description: string;
-}
+export interface SubmitDatasetResult extends DatasetDetail {}
 
 export interface MyDatasetsResponse {
   total: number;
-  datasets: MyContribution[];
+  datasets: DatasetSummary[];
 }
 
 export interface UpdateMyDatasetInput {
