@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     auth_secret_key: str = "dev-change-me-in-production"
     auth_token_ttl_hours: int = 24
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    kaggle_username: str | None = None
+    kaggle_key: str | None = None
 
 
 @lru_cache

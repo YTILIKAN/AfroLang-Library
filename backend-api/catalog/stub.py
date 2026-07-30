@@ -13,8 +13,8 @@ from catalog.api_schemas import (
     SourceResponse,
     TaskResponse,
 )
+from core.language_codes import resolve_language_code
 from catalog.filter_params import normalize_data_format, normalize_source_slug, resolve_task_filter
-from catalog.language_resolver import resolve_language_code
 from core.models import UNKNOWN, Provenance
 
 _STUB_DATASETS: list[DatasetDetailResponse] = [

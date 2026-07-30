@@ -1,9 +1,9 @@
 from sqlalchemy import text
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
-
-from catalog.language_resolver import resolve_language_code
+from core.language_codes import resolve_language_code
 from core.models import Dataset, DatasetTaskLink, Language, Source, Task
+
 
 
 class CatalogRepository:
