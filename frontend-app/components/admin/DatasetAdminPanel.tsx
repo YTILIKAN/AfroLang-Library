@@ -4,6 +4,18 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AdminNav } from "@/components/admin/AdminNav";
 import {
+  btnDark,
+  btnGhost,
+  btnGhostDanger,
+  btnOrange,
+  cardElevated,
+  inputClass,
+  labelMono,
+  pageShell,
+  selectClass,
+  tagClass,
+} from "@/components/ui/styles";
+import {
   createAdminDataset,
   deleteAdminDataset,
   listAdminDatasets,
@@ -155,94 +167,88 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6">
+    <div className={`${pageShell} flex flex-col gap-8 py-10`}>
+      <header className="flex flex-col gap-6 border-b border-hairline pb-8">
         <AdminNav active="datasets" />
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">Administration</p>
-          <h1 className="text-2xl font-semibold text-zinc-900">Datasets de l&apos;index</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Connecté en tant que {adminName} — CRUD global (FR-19, Story 4.3).
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={openCreateForm}
-            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
-          >
-            Ajouter un dataset
-          </button>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-          >
-            Déconnexion
-          </button>
-        </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className={labelMono}>Administration</p>
+            <h1 className="mt-2 text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
+              Datasets de l&apos;index
+            </h1>
+            <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
+              Connecté en tant que {adminName} — CRUD global (FR-19, Story 4.3).
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={openCreateForm} className={btnOrange}>
+              Ajouter un dataset
+            </button>
+            <button type="button" onClick={onLogout} className={btnGhost}>
+              Déconnexion
+            </button>
+          </div>
         </div>
       </header>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">{error}</div>
       ) : null}
 
       {formOpen ? (
-        <form onSubmit={handleSubmit} className="grid gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5">
-          <h2 className="text-lg font-semibold text-zinc-900">
+        <form onSubmit={handleSubmit} className={`grid gap-4 ${cardElevated}`}>
+          <h2 className="font-mono-ui text-sm font-medium uppercase tracking-[0.012em] text-ink-black">
             {isEditing ? "Modifier le dataset" : "Nouveau dataset"}
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="font-medium">Titre</span>
+            <label className="space-y-2 sm:col-span-2">
+              <span className={labelMono}>Titre</span>
               <input
                 required
                 value={form.title}
                 onChange={(event) => setForm({ ...form, title: event.target.value })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="font-medium">Lien source (source_url)</span>
+            <label className="space-y-2 sm:col-span-2">
+              <span className={labelMono}>Lien source (source_url)</span>
               <input
                 required
                 type="url"
                 value={form.source_url}
                 onChange={(event) => setForm({ ...form, source_url: event.target.value })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium">Langue (code ou alias)</span>
+            <label className="space-y-2">
+              <span className={labelMono}>Langue (code ou alias)</span>
               <input
                 required
                 value={form.language}
                 onChange={(event) => setForm({ ...form, language: event.target.value })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium">Tâche NLP</span>
+            <label className="space-y-2">
+              <span className={labelMono}>Tâche NLP</span>
               <input
                 required
                 value={form.task}
                 onChange={(event) => setForm({ ...form, task: event.target.value })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium">Provenance</span>
+            <label className="space-y-2">
+              <span className={labelMono}>Provenance</span>
               <select
                 value={form.provenance}
                 onChange={(event) => setForm({ ...form, provenance: event.target.value as Provenance })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={`${inputClass} ${selectClass}`}
               >
                 {PROVENANCE_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -252,102 +258,84 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
               </select>
             </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium">Format</span>
+            <label className="space-y-2">
+              <span className={labelMono}>Format</span>
               <input
                 value={form.data_format ?? ""}
                 onChange={(event) => setForm({ ...form, data_format: event.target.value })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-1 text-sm sm:col-span-2">
-              <span className="font-medium">Description</span>
+            <label className="space-y-2 sm:col-span-2">
+              <span className={labelMono}>Description</span>
               <textarea
                 rows={3}
                 value={form.description ?? ""}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+                className={inputClass}
               />
             </label>
           </div>
 
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
-            >
+            <button type="submit" disabled={saving} className={btnDark}>
               {saving ? "Enregistrement…" : isEditing ? "Mettre à jour" : "Créer"}
             </button>
-            <button
-              type="button"
-              onClick={closeForm}
-              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-white"
-            >
+            <button type="button" onClick={closeForm} className={btnGhost}>
               Annuler
             </button>
           </div>
         </form>
       ) : null}
 
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <section className={`overflow-hidden ${cardElevated}`}>
         {loading ? (
-          <p className="p-6 text-sm text-zinc-600">Chargement des datasets…</p>
+          <p className="font-serif text-sm text-slate">Chargement des datasets…</p>
         ) : sortedDatasets.length === 0 ? (
-          <p className="p-6 text-sm text-zinc-600">Aucun dataset dans l&apos;index.</p>
+          <p className="font-serif text-sm text-slate">Aucun dataset dans l&apos;index.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600">
+            <table className="min-w-full text-left">
+              <thead className="border-b border-hairline font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
                 <tr>
-                  <th className="px-4 py-3">Titre</th>
-                  <th className="px-4 py-3">Langue</th>
-                  <th className="px-4 py-3">Tâches</th>
-                  <th className="px-4 py-3">Provenance</th>
-                  <th className="px-4 py-3">Source</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 font-medium">Titre</th>
+                  <th className="px-4 py-3 font-medium">Langue</th>
+                  <th className="px-4 py-3 font-medium">Tâches</th>
+                  <th className="px-4 py-3 font-medium">Provenance</th>
+                  <th className="px-4 py-3 font-medium">Source</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedDatasets.map((dataset) => (
-                  <tr key={dataset.id} className="border-b border-zinc-100 last:border-none">
-                    <td className="px-4 py-3 font-medium text-zinc-900">{dataset.title}</td>
-                    <td className="px-4 py-3 text-zinc-700">
+                  <tr key={dataset.id} className="border-b border-hairline last:border-none">
+                    <td className="px-4 py-3 font-serif text-sm font-medium text-ink-black">{dataset.title}</td>
+                    <td className="px-4 py-3 font-serif text-sm text-graphite">
                       {dataset.language.name} ({dataset.language.code})
                     </td>
-                    <td className="px-4 py-3 text-zinc-700">
+                    <td className="px-4 py-3 font-serif text-sm text-graphite">
                       {dataset.tasks.map((task) => task.label).join(", ") || "inconnu"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
-                        {dataset.provenance}
-                      </span>
+                      <span className={tagClass}>{dataset.provenance}</span>
                     </td>
                     <td className="px-4 py-3">
                       <a
                         href={dataset.source_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-emerald-700 hover:underline"
+                        className="font-mono-ui text-[11px] uppercase tracking-[0.012em] text-schematic-blue hover:underline"
                       >
                         Ouvrir
                       </a>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(dataset)}
-                          className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:bg-zinc-50"
-                        >
+                        <button type="button" onClick={() => openEditForm(dataset)} className={btnGhostDanger}>
                           Modifier
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(dataset)}
-                          className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                        >
+                        <button type="button" onClick={() => void handleDelete(dataset)} className={btnGhostDanger}>
                           Supprimer
                         </button>
                       </div>
@@ -360,9 +348,8 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
         )}
       </section>
 
-      <p className="text-xs text-zinc-500">
-        {sortedDatasets.length} dataset{sortedDatasets.length > 1 ? "s" : ""} — API{" "}
-        <code className="rounded bg-zinc-100 px-1">/accounts/admin/datasets</code>
+      <p className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
+        {sortedDatasets.length} dataset{sortedDatasets.length > 1 ? "s" : ""} — API /accounts/admin/datasets
       </p>
     </div>
   );

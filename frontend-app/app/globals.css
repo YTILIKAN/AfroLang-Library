@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-schematic-blue: #0d6ea5;
+  --color-signal-orange: #fb631b;
+  --color-ink-black: #181818;
+  --color-graphite: #434343;
+  --color-slate: #858483;
+  --color-ash-gray: #666666;
+  --color-hairline: #e5e5e5;
+  --color-cream-paper: #f5f4f1;
+  --color-pure-white: #ffffff;
+  --color-fog: #eeeeee;
+  --color-mortar: #dedede;
+  --color-concrete: #cbcbcb;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-source-serif), "Source Serif 4", Georgia, serif;
+  --font-mono-ui: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: 2px;
+  --radius-lg: 8px;
+
+  --shadow-subtle: rgb(229, 229, 229) 0px 0px 0px 0.5px;
+  --shadow-card: rgba(0, 0, 0, 0.02) 0px 13px 8px 0px, rgba(0, 0, 0, 0.03) 0px 6px 6px 0px,
+    rgba(0, 0, 0, 0.04) 0px 1px 3px 0px;
+
+  --spacing-section: 5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream-paper);
+  color: var(--color-ink-black);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+.footer-dither {
+  background-color: var(--color-ink-black);
+  background-image: radial-gradient(circle, rgb(67 67 67 / 0.45) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.data-stream-column {
+  animation: stream-drift 28s linear infinite;
+}
+
+@keyframes stream-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
 }

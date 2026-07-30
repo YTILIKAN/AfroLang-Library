@@ -7,9 +7,22 @@ import {
   AdminDatasetListResponse,
   AdminDatasetUpdateInput,
   DatasetDetail,
+  RegisterInput,
+  SubmitDatasetInput,
+  SubmitDatasetResult,
+  MyContribution,
+  MyDatasetsResponse,
+  UpdateMyDatasetInput,
   TokenResponse,
 } from "../types";
 import { apiRequest } from "./client";
+
+export function register(input: RegisterInput): Promise<Account> {
+  return apiRequest<Account>("/accounts/auth/register", {
+    method: "POST",
+    body: input,
+  });
+}
 
 export function login(email: string, password: string): Promise<TokenResponse> {
   return apiRequest<TokenResponse>("/accounts/auth/login", {
@@ -27,6 +40,33 @@ export function logout(): Promise<void> {
 
 export function fetchMe(): Promise<Account> {
   return apiRequest<Account>("/accounts/me", { auth: true });
+}
+
+export function submitDataset(input: SubmitDatasetInput): Promise<SubmitDatasetResult> {
+  return apiRequest<SubmitDatasetResult>("/accounts/datasets", {
+    method: "POST",
+    auth: true,
+    body: input,
+  });
+}
+
+export function listMyDatasets(): Promise<MyDatasetsResponse> {
+  return apiRequest<MyDatasetsResponse>("/accounts/datasets/mine", { auth: true });
+}
+
+export function updateMyDataset(id: number, input: UpdateMyDatasetInput): Promise<MyContribution> {
+  return apiRequest<MyContribution>(`/accounts/datasets/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: input,
+  });
+}
+
+export function deleteMyDataset(id: number): Promise<{ detail: string }> {
+  return apiRequest<{ detail: string }>(`/accounts/datasets/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
 }
 
 export function listAdminDatasets(): Promise<AdminDatasetListResponse> {

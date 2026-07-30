@@ -4,6 +4,17 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AdminNav } from "@/components/admin/AdminNav";
 import {
+  btnDark,
+  btnGhost,
+  btnOrange,
+  cardElevated,
+  inputClass,
+  labelMono,
+  pageShell,
+  selectClass,
+  tagClass,
+} from "@/components/ui/styles";
+import {
   createAdminAccount,
   listAdminAccounts,
   updateAdminAccount,
@@ -122,30 +133,24 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6">
+    <div className={`${pageShell} flex flex-col gap-8 py-10`}>
+      <header className="flex flex-col gap-6 border-b border-hairline pb-8">
         <AdminNav active="accounts" />
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">Administration</p>
-            <h1 className="text-2xl font-semibold text-zinc-900">Comptes utilisateurs</h1>
-            <p className="mt-1 text-sm text-zinc-600">
+            <p className={labelMono}>Administration</p>
+            <h1 className="mt-2 text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
+              Comptes utilisateurs
+            </h1>
+            <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
               Connecté en tant que {adminName} — gestion des rôles (FR-20, Story 4.4).
             </p>
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setFormOpen((open) => !open)}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
-            >
+            <button type="button" onClick={() => setFormOpen((open) => !open)} className={btnOrange}>
               {formOpen ? "Fermer le formulaire" : "Créer un compte"}
             </button>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-            >
+            <button type="button" onClick={onLogout} className={btnGhost}>
               Déconnexion
             </button>
           </div>
@@ -153,52 +158,54 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
       </header>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">{error}</div>
       ) : null}
 
       {formOpen ? (
-        <form onSubmit={handleCreate} className="grid gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-5 sm:grid-cols-2">
-          <h2 className="text-lg font-semibold text-zinc-900 sm:col-span-2">Nouveau compte</h2>
+        <form onSubmit={handleCreate} className={`grid gap-4 sm:grid-cols-2 ${cardElevated}`}>
+          <h2 className="font-mono-ui text-sm font-medium uppercase tracking-[0.012em] text-ink-black sm:col-span-2">
+            Nouveau compte
+          </h2>
 
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">E-mail</span>
+          <label className="space-y-2">
+            <span className={labelMono}>E-mail</span>
             <input
               type="email"
               required
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+              className={inputClass}
             />
           </label>
 
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Mot de passe</span>
+          <label className="space-y-2">
+            <span className={labelMono}>Mot de passe</span>
             <input
               type="password"
               required
               minLength={8}
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+              className={inputClass}
             />
           </label>
 
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Nom affiché</span>
+          <label className="space-y-2">
+            <span className={labelMono}>Nom affiché</span>
             <input
               required
               value={form.display_name}
               onChange={(event) => setForm({ ...form, display_name: event.target.value })}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+              className={inputClass}
             />
           </label>
 
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Rôle</span>
+          <label className="space-y-2">
+            <span className={labelMono}>Rôle</span>
             <select
               value={form.role}
               onChange={(event) => setForm({ ...form, role: event.target.value as AccountRole })}
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2"
+              className={`${inputClass} ${selectClass}`}
             >
               {ROLE_OPTIONS.map((role) => (
                 <option key={role} value={role}>
@@ -209,46 +216,44 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
           </label>
 
           <div className="sm:col-span-2">
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
-            >
+            <button type="submit" disabled={saving} className={btnDark}>
               {saving ? "Création…" : "Créer le compte"}
             </button>
           </div>
         </form>
       ) : null}
 
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <section className={`overflow-hidden ${cardElevated}`}>
         {loading ? (
-          <p className="p-6 text-sm text-zinc-600">Chargement des comptes…</p>
+          <p className="font-serif text-sm text-slate">Chargement des comptes…</p>
         ) : sortedAccounts.length === 0 ? (
-          <p className="p-6 text-sm text-zinc-600">Aucun compte enregistré.</p>
+          <p className="font-serif text-sm text-slate">Aucun compte enregistré.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600">
+            <table className="min-w-full text-left">
+              <thead className="border-b border-hairline font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
                 <tr>
-                  <th className="px-4 py-3">Nom</th>
-                  <th className="px-4 py-3">E-mail</th>
-                  <th className="px-4 py-3">Rôle</th>
-                  <th className="px-4 py-3">Statut</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 font-medium">Nom</th>
+                  <th className="px-4 py-3 font-medium">E-mail</th>
+                  <th className="px-4 py-3 font-medium">Rôle</th>
+                  <th className="px-4 py-3 font-medium">Statut</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedAccounts.map((account) => (
-                  <tr key={account.id} className="border-b border-zinc-100 last:border-none">
-                    <td className="px-4 py-3 font-medium text-zinc-900">{account.display_name}</td>
-                    <td className="px-4 py-3 text-zinc-700">{account.email}</td>
+                  <tr key={account.id} className="border-b border-hairline last:border-none">
+                    <td className="px-4 py-3 font-serif text-sm font-medium text-ink-black">
+                      {account.display_name}
+                    </td>
+                    <td className="px-4 py-3 font-serif text-sm text-graphite">{account.email}</td>
                     <td className="px-4 py-3">
                       <select
                         value={account.role}
                         onChange={(event) =>
                           void handleRoleChange(account, event.target.value as AccountRole)
                         }
-                        className="rounded-md border border-zinc-300 px-2 py-1 text-sm"
+                        className={selectClass}
                       >
                         {ROLE_OPTIONS.map((role) => (
                           <option key={role} value={role}>
@@ -258,22 +263,14 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                       </select>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-medium ${
-                          account.is_active
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-zinc-200 text-zinc-700"
-                        }`}
-                      >
-                        {account.is_active ? "Actif" : "Désactivé"}
-                      </span>
+                      <span className={tagClass}>{account.is_active ? "Actif" : "Désactivé"}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => void handleToggleActive(account)}
                         disabled={account.id === currentAccountId && account.is_active}
-                        className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        className={`${btnGhost} disabled:cursor-not-allowed`}
                       >
                         {account.is_active ? "Désactiver" : "Réactiver"}
                       </button>
@@ -286,9 +283,8 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
         )}
       </section>
 
-      <p className="text-xs text-zinc-500">
-        {sortedAccounts.length} compte{sortedAccounts.length > 1 ? "s" : ""} — API{" "}
-        <code className="rounded bg-zinc-100 px-1">/accounts/admin/accounts</code>
+      <p className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
+        {sortedAccounts.length} compte{sortedAccounts.length > 1 ? "s" : ""} — API /accounts/admin/accounts
       </p>
     </div>
   );

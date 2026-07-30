@@ -1,11 +1,13 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import Link from "next/link";
+import { ReactNode, useState } from "react";
 
-import { LoginForm } from "@/components/auth/LoginForm";
-import { fetchMe, logout as apiLogout } from "@/lib/api/accounts";
-import { ApiError } from "@/lib/api/client";
-import { clearStoredToken, getStoredToken } from "@/lib/auth-storage";
+import { AdminLoginForm } from "@/components/auth/AuthForms";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { btnDark, btnGhost } from "@/components/ui/styles";
+import { clearStoredToken } from "@/lib/auth-storage";
 import { Account } from "@/lib/types";
 
 interface AdminGateProps {
@@ -13,112 +15,71 @@ interface AdminGateProps {
 }
 
 export function AdminGate({ children }: AdminGateProps) {
-  const [account, setAccount] = useState<Account | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [forbidden, setForbidden] = useState(false);
+  const { account, loading, logout, setAccount } = useAuth();
+  const [loginRejected, setLoginRejected] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function init() {
-      const token = getStoredToken();
-      if (!token) {
-        if (!cancelled) {
-          setAccount(null);
-          setForbidden(false);
-          setLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const me = await fetchMe();
-        if (cancelled) {
-          return;
-        }
-        if (me.role !== "admin") {
-          setForbidden(true);
-          setAccount(null);
-        } else {
-          setForbidden(false);
-          setAccount(me);
-        }
-      } catch (err) {
-        if (cancelled) {
-          return;
-        }
-        clearStoredToken();
-        setAccount(null);
-        setForbidden(false);
-        if (err instanceof ApiError && err.status === 403) {
-          setForbidden(true);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void init();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const researcherBlocked = account !== null && account.role !== "admin";
+  const showForbidden = researcherBlocked || loginRejected;
 
   async function handleLogout() {
-    try {
-      await apiLogout();
-    } catch {
-      // Jeton déjà invalide — on nettoie localement.
+    await logout();
+    setLoginRejected(false);
+  }
+
+  function handleAdminSuccess(loggedIn: Account) {
+    if (loggedIn.role !== "admin") {
+      setLoginRejected(true);
+      clearStoredToken();
+      setAccount(null);
+      return;
     }
-    clearStoredToken();
-    setAccount(null);
-    setForbidden(false);
+    setLoginRejected(false);
   }
 
-  if (loading) {
+  if (account?.role === "admin") {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-zinc-600">
-        Vérification de la session…
+      <div className="flex min-h-full flex-col">
+        <SiteHeader />
+        {children(account, handleLogout)}
       </div>
     );
   }
 
-  if (forbidden) {
-    return (
-      <div className="mx-auto max-w-lg rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
-        <h2 className="text-lg font-semibold text-amber-900">Accès refusé</h2>
-        <p className="mt-2 text-sm text-amber-800">
-          Cette interface est réservée aux administrateurs (AD-14).
-        </p>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="mt-4 rounded-lg border border-amber-300 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
-        >
-          Se déconnecter
-        </button>
-      </div>
-    );
-  }
+  return (
+    <div className="flex min-h-full flex-col">
+      <SiteHeader />
 
-  if (!account) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center px-4">
-        <LoginForm
-          onSuccess={(loggedIn) => {
-            if (loggedIn.role !== "admin") {
-              setForbidden(true);
-              clearStoredToken();
-              return;
-            }
-            setAccount(loggedIn);
-          }}
-        />
-      </div>
-    );
-  }
-
-  return <>{children(account, handleLogout)}</>;
+      {loading ? (
+        <div className="flex flex-1 items-center justify-center py-24">
+          <p className="font-mono-ui text-[11px] uppercase tracking-[0.015em] text-slate">
+            Vérification de la session…
+          </p>
+        </div>
+      ) : showForbidden ? (
+        <div className="mx-auto max-w-lg px-6 py-24 text-center">
+          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-ink-black">
+            Accès refusé
+          </p>
+          <h2 className="mt-3 text-[26px] font-medium leading-[1.23] text-ink-black">
+            Interface réservée aux administrateurs
+          </h2>
+          <p className="mt-3 font-serif text-sm leading-relaxed text-slate">
+            Votre compte chercheur ne peut pas accéder à l&apos;administration (AD-14).
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link href="/contribute" className={btnDark}>
+              Espace contribution
+            </Link>
+            <button type="button" onClick={() => void handleLogout()} className={btnGhost}>
+              Se déconnecter
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-1 items-center justify-center px-6 py-16">
+          <AdminLoginForm onSuccess={handleAdminSuccess} />
+        </div>
+      )}
+    </div>
+  );
 }

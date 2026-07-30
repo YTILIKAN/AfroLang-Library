@@ -52,6 +52,95 @@ export interface DatasetDetail extends DatasetSummary {
   updated_at: string;
 }
 
+export interface DatasetSearchResponse {
+  language_query: string;
+  language_code: string;
+  total: number;
+  datasets: DatasetSummary[];
+}
+
+export interface AppliedFilters {
+  language: string | null;
+  language_code: string | null;
+  source: string | null;
+  task: string | null;
+  task_code: string | null;
+  data_format: string | null;
+}
+
+export interface DatasetFilterResponse {
+  filters: AppliedFilters;
+  total: number;
+  datasets: DatasetSummary[];
+}
+
+export interface DatasetFilterParams {
+  language?: string;
+  source?: string;
+  task?: string;
+  data_format?: string;
+}
+
+export interface LanguageAggregationStats {
+  dataset_count: number;
+  task_count: number;
+  tasks_covered: TaskInfo[];
+}
+
+export interface LanguageOverviewResponse {
+  language_query: string;
+  language_code: string;
+  language: LanguageInfo | null;
+  stats: LanguageAggregationStats;
+  datasets: DatasetSummary[];
+}
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  display_name: string;
+}
+
+export interface SubmitDatasetInput {
+  title: string;
+  source_url: string;
+  language: string;
+  task: string;
+  description?: string;
+  license_name?: string;
+  data_format?: string;
+  size?: string;
+}
+
+export interface SubmitDatasetResult {
+  id: number;
+  title: string;
+  language_code: string;
+  source_url: string;
+  provenance: Provenance;
+  tasks: TaskInfo[];
+  description: string;
+}
+
+export interface MyContribution {
+  id: number;
+  title: string;
+  language_code: string;
+  source_url: string;
+  provenance: Provenance;
+  tasks: TaskInfo[];
+  description: string;
+}
+
+export interface MyDatasetsResponse {
+  total: number;
+  datasets: MyContribution[];
+}
+
+export interface UpdateMyDatasetInput {
+  title?: string;
+}
+
 export interface AdminDatasetListResponse {
   total: number;
   datasets: DatasetSummary[];
