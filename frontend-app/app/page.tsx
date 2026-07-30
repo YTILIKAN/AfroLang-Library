@@ -19,6 +19,12 @@ export default function Home() {
           >
             Administration des datasets
           </Link>
+          <Link
+            href="/admin/accounts"
+            className="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-800"
+          >
+            Gestion des comptes
+          </Link>
           <a
             href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/docs`}
             target="_blank"

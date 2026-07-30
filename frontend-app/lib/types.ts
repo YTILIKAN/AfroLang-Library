@@ -80,3 +80,21 @@ export interface AdminDatasetUpdateInput {
   data_format?: string;
   size?: string;
 }
+
+export interface AdminAccountsListResponse {
+  total: number;
+  accounts: Account[];
+}
+
+export interface AdminAccountCreateInput {
+  email: string;
+  password: string;
+  display_name: string;
+  role?: AccountRole;
+}
+
+export interface AdminAccountUpdateInput {
+  display_name?: string;
+  role?: AccountRole;
+  is_active?: boolean;
+}

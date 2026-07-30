@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { AdminNav } from "@/components/admin/AdminNav";
 import {
   createAdminDataset,
   deleteAdminDataset,
@@ -155,7 +156,9 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-4 border-b border-zinc-200 pb-6">
+        <AdminNav active="datasets" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">Administration</p>
           <h1 className="text-2xl font-semibold text-zinc-900">Datasets de l&apos;index</h1>
@@ -178,6 +181,7 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
           >
             Déconnexion
           </button>
+        </div>
         </div>
       </header>
 

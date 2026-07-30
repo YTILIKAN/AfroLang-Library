@@ -10,6 +10,13 @@ Page : [`/admin/datasets`](http://localhost:3000/admin/datasets)
 - Création, modification, suppression (contrat Story 4.1)
 - Accès réservé au rôle **Admin** (vérification côté API + garde UI)
 
+## Story 4.4 — Gestion des comptes
+
+Page : [`/admin/accounts`](http://localhost:3000/admin/accounts)
+
+- Liste, création, attribution de rôles et désactivation via `GET/POST/PATCH /accounts/admin/accounts`
+- Contrat Story 4.2 — accès Admin uniquement
+
 ## Démarrage local
 
 ```powershell
@@ -41,7 +48,8 @@ Compte bouchon admin : `admin@afriland.org` / `admin123`
 ```
 frontend-app/
 ├── app/admin/datasets/   # Story 4.3
-├── components/admin/     # Panneau CRUD datasets
+├── app/admin/accounts/   # Story 4.4
+├── components/admin/     # Panneaux CRUD + navigation admin
 ├── components/auth/      # Garde Admin + login minimal
 └── lib/api/              # Client API accounts (AD-3)
 ```

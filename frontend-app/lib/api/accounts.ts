@@ -1,5 +1,8 @@
 import {
   Account,
+  AdminAccountCreateInput,
+  AdminAccountUpdateInput,
+  AdminAccountsListResponse,
   AdminDatasetCreateInput,
   AdminDatasetListResponse,
   AdminDatasetUpdateInput,
@@ -54,5 +57,29 @@ export function deleteAdminDataset(id: number): Promise<{ detail: string }> {
   return apiRequest<{ detail: string }>(`/accounts/admin/datasets/${id}`, {
     method: "DELETE",
     auth: true,
+  });
+}
+
+export function listAdminAccounts(): Promise<AdminAccountsListResponse> {
+  return apiRequest<AdminAccountsListResponse>("/accounts/admin/accounts", { auth: true });
+}
+
+export function getAdminAccount(id: number): Promise<Account> {
+  return apiRequest<Account>(`/accounts/admin/accounts/${id}`, { auth: true });
+}
+
+export function createAdminAccount(input: AdminAccountCreateInput): Promise<Account> {
+  return apiRequest<Account>("/accounts/admin/accounts", {
+    method: "POST",
+    auth: true,
+    body: input,
+  });
+}
+
+export function updateAdminAccount(id: number, input: AdminAccountUpdateInput): Promise<Account> {
+  return apiRequest<Account>(`/accounts/admin/accounts/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: input,
   });
 }
