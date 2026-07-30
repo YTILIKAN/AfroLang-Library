@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { ResearcherGate } from "@/components/auth/ResearcherGate";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { btnDark, btnGhost, pageShell, sectionGap, tagClass } from "@/components/ui/styles";
+import { btnDark, btnGhost, pageShell, sectionGap, tagClass, accentBar, headingDisplay } from "@/components/ui/styles";
 import { Account } from "@/lib/types";
 
 function ContributeHub({ account, onLogout }: { account: Account; onLogout: () => void }) {
@@ -12,12 +12,11 @@ function ContributeHub({ account, onLogout }: { account: Account; onLogout: () =
     <>
       <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
         <div className="max-w-3xl space-y-4">
-          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-graphite">
+          <div className={accentBar} aria-hidden />
+          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-terracotta">
             Espace chercheur
           </p>
-          <h1 className="text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
-            Contribuer à l&apos;index
-          </h1>
+          <h1 className={headingDisplay}>Contribuer à l&apos;index</h1>
           <p className="font-serif text-sm leading-relaxed text-slate">
             Connecté en tant que {account.display_name} ({account.role}) — soumission et gestion de vos
             datasets (Stories 3.5–3.6).

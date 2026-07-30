@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { DatasetCard } from "@/components/catalog/DatasetCard";
 import { LanguageSearchForm, languageOverviewPath } from "@/components/catalog/LanguageSearchForm";
-import { pageShell, sectionGap } from "@/components/ui/styles";
+import { pageShell, sectionGap, accentBar, headingDisplay } from "@/components/ui/styles";
 import { searchDatasets } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 
@@ -33,12 +33,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
         <div className="max-w-3xl space-y-4">
-          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-graphite">
+          <div className={accentBar} aria-hidden />
+          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-terracotta">
             Catalogue public
           </p>
-          <h1 className="text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
-            Recherche par langue
-          </h1>
+          <h1 className={headingDisplay}>Recherche par langue</h1>
           <p className="font-serif text-sm leading-relaxed text-slate">
             Code ISO 639-3 ou alias — Yoruba, yor, Wolof, Swahili… (FR-11, Story 1.12).
           </p>

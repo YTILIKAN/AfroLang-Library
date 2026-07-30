@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
-import { cardElevated, pageShell, sectionGap, tagClass } from "@/components/ui/styles";
+import { cardElevated, pageShell, sectionGap, tagClass, accentBar, headingDisplay } from "@/components/ui/styles";
 
 const FEATURED_LANGUAGES = [
   { label: "Yoruba", slug: "Yoruba" },
@@ -18,12 +18,11 @@ export default function LanguagesIndexPage() {
 
       <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
         <div className="max-w-3xl space-y-4">
-          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-graphite">
+          <div className={accentBar} aria-hidden />
+          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-terracotta">
             Catalogue public
           </p>
-          <h1 className="text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
-            Explorer par langue
-          </h1>
+          <h1 className={headingDisplay}>Explorer par langue</h1>
           <p className="font-serif text-sm leading-relaxed text-slate">
             Vue d&apos;ensemble : compteurs, tâches NLP couvertes et liste des datasets (FR-14, Story 2.5).
           </p>
