@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     accounts_stub: bool = False
     auth_secret_key: str = "dev-change-me-in-production"
     auth_token_ttl_hours: int = 24
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
 
 @lru_cache

@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 
 from catalog.routes import PUBLIC_API_VERSION, catalog_router, public_router
@@ -58,6 +59,16 @@ def create_app() -> FastAPI:
     app.include_router(public_router, prefix="/api/v1")
     app.include_router(catalog_router, prefix="/catalog")
     app.include_router(accounts_router)
+
+    cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+    if cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:
