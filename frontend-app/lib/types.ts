@@ -30,6 +30,18 @@ export interface TaskInfo {
   label: string;
 }
 
+export interface SourceInfo {
+  slug: string;
+  name: string;
+  base_url: string;
+}
+
+export interface LicenseInfo {
+  name: string;
+  spdx_id: string | null;
+  url: string;
+}
+
 export interface DatasetSummary {
   id: number;
   external_id: string;
@@ -37,8 +49,8 @@ export interface DatasetSummary {
   description: string;
   language: LanguageInfo;
   language_raw: string;
-  source: { slug: string; name: string; base_url: string };
-  license: { name: string; spdx_id: string | null; url: string } | null;
+  source: SourceInfo;
+  license: LicenseInfo | null;
   provenance: Provenance;
   data_format: string;
   size: string;
@@ -97,4 +109,45 @@ export interface AdminAccountUpdateInput {
   display_name?: string;
   role?: AccountRole;
   is_active?: boolean;
+}
+
+/** Réponse de GET /catalog/datasets/search (Story 1.11). */
+export interface DatasetSearchResponse {
+  language_query: string;
+  language_code: string;
+  total: number;
+  datasets: DatasetSummary[];
+}
+
+/** Filtres appliqués après normalisation côté serveur (Story 2.1). */
+export interface AppliedFiltersResponse {
+  language: string | null;
+  language_code: string | null;
+  source: string | null;
+  task: string | null;
+  task_code: string | null;
+  data_format: string | null;
+}
+
+/** Réponse de GET /catalog/datasets/filter (Story 2.1). */
+export interface DatasetFilterResponse {
+  filters: AppliedFiltersResponse;
+  total: number;
+  datasets: DatasetSummary[];
+}
+
+/** Compteurs basiques pour une langue (FR-14). */
+export interface LanguageAggregationStats {
+  dataset_count: number;
+  task_count: number;
+  tasks_covered: TaskInfo[];
+}
+
+/** Réponse de GET /catalog/languages/overview (Story 2.2). */
+export interface LanguageOverviewResponse {
+  language_query: string;
+  language_code: string;
+  language: LanguageInfo | null;
+  stats: LanguageAggregationStats;
+  datasets: DatasetSummary[];
 }
