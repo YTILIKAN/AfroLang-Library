@@ -16,6 +16,12 @@ from catalog.api_schemas import (
 from core.language_codes import resolve_language_code
 from catalog.filter_params import normalize_data_format, normalize_source_slug, resolve_task_filter
 from core.models import UNKNOWN, Provenance
+from ingestion.normalization.vocabulary import get_task_label
+
+
+def _task(code: str) -> TaskResponse:
+    """Tâche du bouchon — libellé pris dans le vocabulaire contrôlé pour éviter toute dérive."""
+    return TaskResponse(code=code, label=get_task_label(code))
 
 _STUB_DATASETS: list[DatasetDetailResponse] = [
     DatasetDetailResponse(
@@ -31,7 +37,7 @@ _STUB_DATASETS: list[DatasetDetailResponse] = [
         data_format="audio",
         size="2.5 GB",
         source_url="https://huggingface.co/datasets/masakhane/yoruba-asr",
-        tasks=[TaskResponse(code="asr", label="ASR")],
+        tasks=[_task("asr")],
         published_at=datetime(2024, 3, 15, tzinfo=timezone.utc),
         created_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
         updated_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
@@ -49,7 +55,7 @@ _STUB_DATASETS: list[DatasetDetailResponse] = [
         data_format="text",
         size="120 MB",
         source_url="https://huggingface.co/datasets/african-voices/wolof-nmt",
-        tasks=[TaskResponse(code="nmt", label="NMT")],
+        tasks=[_task("nmt")],
         published_at=datetime(2023, 11, 2, tzinfo=timezone.utc),
         created_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
         updated_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
@@ -67,7 +73,7 @@ _STUB_DATASETS: list[DatasetDetailResponse] = [
         data_format="text",
         size="45 MB",
         source_url="https://www.kaggle.com/datasets/swahili-news-classification",
-        tasks=[TaskResponse(code="classification", label="Classification")],
+        tasks=[_task("classification")],
         published_at=None,
         created_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
         updated_at=datetime(2026, 1, 10, tzinfo=timezone.utc),
