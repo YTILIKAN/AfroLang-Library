@@ -13,7 +13,13 @@ from accounts.api_schemas import (
     SubmitDatasetRequest,
     TokenResponse,
 )
-from catalog.api_schemas import DatasetDetailResponse, DatasetSummaryResponse
+from catalog.api_schemas import (
+    DatasetDetailResponse,
+    DatasetSummaryResponse,
+    LanguageResponse,
+    SourceResponse,
+    TaskResponse,
+)
 from catalog import stub as catalog_stub
 from accounts.auth import hash_password
 from core.models import AccountRole
@@ -125,7 +131,36 @@ def resolve_account(token: str) -> AccountResponse:
     return _account_response(email, data)
 
 
-def submit_dataset(account_id: int, payload: SubmitDatasetRequest) -> dict:
+def _contribution_detail(stored: dict) -> DatasetDetailResponse:
+    now = datetime.now(timezone.utc)
+    lang_code = stored.get("language_code", "inconnu")
+    tasks = stored.get("tasks", [])
+    return DatasetDetailResponse(
+        id=stored["id"],
+        external_id=stored.get("external_id", f"stub/{stored['id']}"),
+        title=stored["title"],
+        description=stored.get("description", "inconnu"),
+        language=LanguageResponse(code=lang_code, name=lang_code, family="inconnu", region="inconnu"),
+        language_raw=lang_code,
+        source=SourceResponse(slug="contribution", name="Contribution", base_url="https://example.com"),
+        license=None,
+        provenance=stored.get("provenance", "contribué"),
+        data_format=stored.get("data_format", "inconnu"),
+        size=stored.get("size", "inconnu"),
+        source_url=stored["source_url"],
+        tasks=[TaskResponse(code=task["code"], label=task["label"]) for task in tasks],
+        published_at=None,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def _contribution_summary(stored: dict) -> DatasetSummaryResponse:
+    detail = _contribution_detail(stored)
+    return DatasetSummaryResponse(**detail.model_dump(exclude={"created_at", "updated_at"}))
+
+
+def submit_dataset(account_id: int, payload: SubmitDatasetRequest) -> DatasetDetailResponse:
     dataset_id = 9000 + account_id + len(_STUB_MY_DATASETS.get(account_id, []))
     dataset = {
         "id": dataset_id,
@@ -135,22 +170,24 @@ def submit_dataset(account_id: int, payload: SubmitDatasetRequest) -> dict:
         "provenance": "contribué",
         "tasks": [{"code": payload.task, "label": payload.task.upper()}],
         "description": payload.description or "inconnu",
+        "data_format": payload.data_format or "inconnu",
+        "size": payload.size or "inconnu",
     }
     _STUB_MY_DATASETS.setdefault(account_id, []).append(dataset)
-    return dataset
+    return _contribution_detail(dataset)
 
 
 def list_my_datasets(account_id: int) -> MyDatasetsResponse:
-    datasets = _STUB_MY_DATASETS.get(account_id, [])
+    datasets = [_contribution_summary(item) for item in _STUB_MY_DATASETS.get(account_id, [])]
     return MyDatasetsResponse(total=len(datasets), datasets=datasets)
 
 
-def update_my_dataset(account_id: int, dataset_id: int, title: str | None) -> dict:
+def update_my_dataset(account_id: int, dataset_id: int, title: str | None) -> DatasetDetailResponse:
     for dataset in _STUB_MY_DATASETS.get(account_id, []):
         if dataset["id"] == dataset_id:
             if title is not None:
                 dataset["title"] = title
-            return dataset
+            return _contribution_detail(dataset)
     raise LookupError("Dataset introuvable")
 
 

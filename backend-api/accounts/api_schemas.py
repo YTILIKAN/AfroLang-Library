@@ -52,7 +52,7 @@ class UpdateDatasetRequest(BaseModel):
 
 class MyDatasetsResponse(BaseModel):
     total: int
-    datasets: list[dict]
+    datasets: list[DatasetSummaryResponse]
 
 
 class AdminAccountsResponse(BaseModel):
