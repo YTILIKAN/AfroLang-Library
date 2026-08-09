@@ -7,8 +7,8 @@ interface AdminNavProps {
 export function AdminNav({ active }: AdminNavProps) {
   const linkClass = (section: AdminNavProps["active"]) =>
     section === active
-      ? "rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white"
-      : "rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50";
+      ? "rounded-sm bg-ink-black px-3 py-2 font-mono-ui text-[11px] font-medium uppercase tracking-[0.015em] text-cream-paper"
+      : "rounded-sm border border-hairline px-3 py-2 font-mono-ui text-[11px] font-medium uppercase tracking-[0.015em] text-graphite transition hover:border-ink-black hover:text-ink-black";
 
   return (
     <nav className="flex flex-wrap gap-2">

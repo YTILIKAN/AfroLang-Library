@@ -7,5 +7,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    // Le pool "forks" n'arrive pas à démarrer ses workers depuis un chemin OneDrive
+    // contenant espaces et apostrophes ; "threads" fonctionne sur les mêmes tests.
+    pool: "threads",
   },
 });

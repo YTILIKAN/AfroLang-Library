@@ -1,65 +1,62 @@
 import {
+  DatasetDetail,
+  DatasetFilterParams,
   DatasetFilterResponse,
   DatasetSearchResponse,
-  DatasetSummary,
   LanguageOverviewResponse,
 } from "../types";
-import { apiRequest } from "./client";
+import { ApiError, apiRequest } from "./client";
+
+/** Surface publique stable de l'API de consultation (`/catalog/*` en est l'alias interne). */
+const CATALOG_PREFIX = "/api/v1";
 
 /** Lecture publique de l'index : jamais mise en cache, jamais authentifiée (AD-3, AD-10). */
 const READ_ONLY = { cache: "no-store" } as const;
 
-export interface DatasetFilterParams {
-  language?: string;
-  source?: string;
-  task?: string;
-  data_format?: string;
-}
-
 export function searchDatasets(language: string): Promise<DatasetSearchResponse> {
-  const params = new URLSearchParams({ language });
-  return apiRequest<DatasetSearchResponse>(`/catalog/datasets/search?${params}`, READ_ONLY);
-}
-
-export function filterDatasets(filters: DatasetFilterParams): Promise<DatasetFilterResponse> {
-  const params = new URLSearchParams();
-  const { language, source, task, data_format } = filters;
-  if (language) params.set("language", language);
-  if (source) params.set("source", source);
-  if (task) params.set("task", task);
-  if (data_format) params.set("data_format", data_format);
-
-  return apiRequest<DatasetFilterResponse>(`/catalog/datasets/filter?${params}`, READ_ONLY);
-}
-
-/** Datasets et compteurs d'une langue (FR-14). */
-export function getLanguageOverview(language: string): Promise<LanguageOverviewResponse> {
-  const params = new URLSearchParams({ language });
-  return apiRequest<LanguageOverviewResponse>(
-    `/catalog/languages/overview?${params}`,
+  const query = new URLSearchParams({ language });
+  return apiRequest<DatasetSearchResponse>(
+    `${CATALOG_PREFIX}/datasets/search?${query.toString()}`,
     READ_ONLY,
   );
 }
 
-export interface DatasetResults {
-  total: number;
-  datasets: DatasetSummary[];
-}
-
-/**
- * Résultats affichés par l'interface pour un jeu de critères.
- * Langue seule : recherche par langue (FR-11) ; dès qu'un filtre s'y ajoute : filtrage (FR-12).
- */
-export async function fetchDatasetResults(filters: DatasetFilterParams): Promise<DatasetResults> {
-  const { language, source, task, data_format } = filters;
-  const hasFilter = Boolean(source || task || data_format);
-
-  if (!language && !hasFilter) {
-    return { total: 0, datasets: [] };
+export function filterDatasets(params: DatasetFilterParams): Promise<DatasetFilterResponse> {
+  const query = new URLSearchParams();
+  if (params.language?.trim()) {
+    query.set("language", params.language.trim());
+  }
+  if (params.source?.trim()) {
+    query.set("source", params.source.trim());
+  }
+  if (params.task?.trim()) {
+    query.set("task", params.task.trim());
+  }
+  if (params.data_format?.trim()) {
+    query.set("data_format", params.data_format.trim());
   }
 
-  const response =
-    language && !hasFilter ? await searchDatasets(language) : await filterDatasets(filters);
+  if ([...query.keys()].length === 0) {
+    return Promise.reject(
+      new ApiError("Au moins un filtre requis : langue, source, tâche ou format.", 400),
+    );
+  }
 
-  return { total: response.total, datasets: response.datasets };
+  return apiRequest<DatasetFilterResponse>(
+    `${CATALOG_PREFIX}/datasets/filter?${query.toString()}`,
+    READ_ONLY,
+  );
+}
+
+export function getDataset(id: number): Promise<DatasetDetail> {
+  return apiRequest<DatasetDetail>(`${CATALOG_PREFIX}/datasets/${id}`, READ_ONLY);
+}
+
+/** Datasets et compteurs d'une langue (FR-14). */
+export function getLanguageOverview(language: string): Promise<LanguageOverviewResponse> {
+  const query = new URLSearchParams({ language });
+  return apiRequest<LanguageOverviewResponse>(
+    `${CATALOG_PREFIX}/languages/overview?${query.toString()}`,
+    READ_ONLY,
+  );
 }

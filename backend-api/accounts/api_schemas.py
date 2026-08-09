@@ -44,6 +44,13 @@ class SubmitDatasetRequest(BaseModel):
     license_name: str | None = None
     data_format: str | None = None
     size: str | None = None
+    manual_source: bool = Field(
+        default=False,
+        description=(
+            "Source sans API publique : l'entrée reçoit l'origine `manuel` au lieu de "
+            "`contribué` (FR-5, AD-15). La provenance reste le compte contributeur."
+        ),
+    )
 
 
 class UpdateDatasetRequest(BaseModel):
@@ -52,7 +59,7 @@ class UpdateDatasetRequest(BaseModel):
 
 class MyDatasetsResponse(BaseModel):
     total: int
-    datasets: list[dict]
+    datasets: list[DatasetSummaryResponse]
 
 
 class AdminAccountsResponse(BaseModel):

@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Palette chaude — terre, indigo, ocre */
+  --color-indigo-deep: #1e3a5f;
+  --color-schematic-blue: #1e3a5f;
+  --color-terracotta: #c45c26;
+  --color-signal-orange: #c45c26;
+  --color-ochre: #c9920a;
+  --color-forest: #3d6b35;
+  --color-kente-red: #a83232;
+  --color-kente-gold: #d4a017;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink-black: #1c1512;
+  --color-graphite: #4a4038;
+  --color-slate: #8a7f72;
+  --color-ash-gray: #6b6158;
+  --color-hairline: #e2d5c4;
+  --color-cream-paper: #f9f4eb;
+  --color-sand: #f9f4eb;
+  --color-savanna: #f0e8dc;
+  --color-pure-white: #fffdf9;
+  --color-fog: #f0e8dc;
+  --color-mortar: #ddd0bf;
+  --color-concrete: #c9baa8;
+  --color-clay: #e2d5c4;
+
+  --font-display: var(--font-fraunces), "Fraunces", Georgia, serif;
+  --font-serif: var(--font-source-serif), "Source Serif 4", Georgia, serif;
+  --font-mono-ui: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: 2px;
+  --radius-lg: 8px;
+
+  --shadow-subtle: rgb(226, 213, 196) 0px 0px 0px 0.5px;
+  --shadow-card: rgba(28, 21, 18, 0.04) 0px 13px 8px 0px,
+    rgba(28, 21, 18, 0.05) 0px 6px 6px 0px, rgba(28, 21, 18, 0.06) 0px 1px 3px 0px;
+
+  --spacing-section: 5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream-paper);
+  color: var(--color-ink-black);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bandeau kente — accent horizontal discret */
+.kente-band {
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-kente-red) 0,
+    var(--color-kente-red) 14px,
+    var(--color-ochre) 14px,
+    var(--color-ochre) 28px,
+    var(--color-forest) 28px,
+    var(--color-forest) 42px,
+    var(--color-indigo-deep) 42px,
+    var(--color-indigo-deep) 56px
+  );
+}
+
+.kente-band-md {
+  height: 5px;
+}
+
+/* Motif boubou / mudcloth — points réguliers */
+.pattern-mudcloth {
+  background-color: var(--color-sand);
+  background-image: radial-gradient(circle at center, rgb(196 92 38 / 0.12) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+/* Tissage géométrique très léger */
+.pattern-weave {
+  background-image: linear-gradient(45deg, rgb(28 21 18 / 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgb(28 21 18 / 0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgb(28 21 18 / 0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgb(28 21 18 / 0.03) 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+}
+
+/* Hero — dégradé savane → indigo */
+.hero-african {
+  background: linear-gradient(145deg, var(--color-indigo-deep) 0%, #2a2218 42%, var(--color-ink-black) 100%);
+}
+
+.footer-dither {
+  background-color: var(--color-ink-black);
+  background-image: radial-gradient(circle, rgb(196 146 10 / 0.25) 1px, transparent 1px),
+    radial-gradient(circle, rgb(61 107 53 / 0.15) 1px, transparent 1px);
+  background-size: 6px 6px, 12px 12px;
+  background-position: 0 0, 3px 3px;
+}
+
+.data-stream-column {
+  animation: stream-drift 28s linear infinite;
+}
+
+@keyframes stream-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
 }

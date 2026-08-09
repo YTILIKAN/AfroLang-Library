@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  fetchDatasetResults,
-  filterDatasets,
-  getLanguageOverview,
-  searchDatasets,
-} from "./catalog";
+import { filterDatasets, getDataset, getLanguageOverview, searchDatasets } from "./catalog";
 import { ApiError } from "./client";
 import type { DatasetFilterResponse, DatasetSearchResponse } from "../types";
 import { buildDataset, buildLanguageOverview } from "@/test/fixtures";
@@ -47,12 +42,12 @@ afterEach(() => {
 });
 
 describe("searchDatasets", () => {
-  it("appelle l'API catalog avec la langue demandée et retourne le JSON parsé", async () => {
+  it("appelle la surface publique v1 avec la langue demandée et retourne le JSON parsé", async () => {
     const fetchMock = stubJsonResponse(sampleSearchResponse);
 
     const result = await searchDatasets("yoruba");
 
-    expect(calledUrl(fetchMock)).toBe(`${API_URL}/catalog/datasets/search?language=yoruba`);
+    expect(calledUrl(fetchMock)).toBe(`${API_URL}/api/v1/datasets/search?language=yoruba`);
     expect(result).toEqual(sampleSearchResponse);
   });
 
@@ -62,7 +57,7 @@ describe("searchDatasets", () => {
     await searchDatasets("Yorùbá");
 
     expect(calledUrl(fetchMock)).toBe(
-      `${API_URL}/catalog/datasets/search?language=Yor%C3%B9b%C3%A1`,
+      `${API_URL}/api/v1/datasets/search?language=Yor%C3%B9b%C3%A1`,
     );
   });
 
@@ -75,6 +70,15 @@ describe("searchDatasets", () => {
       expect.any(String),
       expect.objectContaining({ cache: "no-store" }),
     );
+  });
+
+  it("n'envoie aucun en-tête d'authentification sur la consultation publique (AD-10)", async () => {
+    const fetchMock = stubJsonResponse(sampleSearchResponse);
+
+    await searchDatasets("yoruba");
+
+    const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
+    expect(headers.has("Authorization")).toBe(false);
   });
 
   it("remonte une ApiError portant le statut quand la réponse n'est pas ok", async () => {
@@ -109,12 +113,12 @@ describe("filterDatasets", () => {
     const result = await filterDatasets({ source: "huggingface", data_format: "audio" });
 
     expect(calledUrl(fetchMock)).toBe(
-      `${API_URL}/catalog/datasets/filter?source=huggingface&data_format=audio`,
+      `${API_URL}/api/v1/datasets/filter?source=huggingface&data_format=audio`,
     );
     expect(result).toEqual(sampleFilterResponse);
   });
 
-  it("combine langue, source, tâche et format quand ils sont tous fournis", async () => {
+  it("combine langue, source, tâche et format quand ils sont tous fournis (FR-12)", async () => {
     const fetchMock = stubJsonResponse(sampleFilterResponse);
 
     await filterDatasets({
@@ -125,8 +129,26 @@ describe("filterDatasets", () => {
     });
 
     expect(calledUrl(fetchMock)).toBe(
-      `${API_URL}/catalog/datasets/filter?language=swahili&source=kaggle&task=asr&data_format=text`,
+      `${API_URL}/api/v1/datasets/filter?language=swahili&source=kaggle&task=asr&data_format=text`,
     );
+  });
+
+  it("ignore les filtres vides ou faits d'espaces", async () => {
+    const fetchMock = stubJsonResponse(sampleFilterResponse);
+
+    await filterDatasets({ language: "  swahili  ", source: "   ", task: "" });
+
+    expect(calledUrl(fetchMock)).toBe(`${API_URL}/api/v1/datasets/filter?language=swahili`);
+  });
+
+  it("rejette sans requête réseau quand aucun filtre n'est actif", async () => {
+    const fetchMock = stubJsonResponse(sampleFilterResponse);
+
+    await expect(filterDatasets({ language: "   " })).rejects.toMatchObject({
+      name: "ApiError",
+      status: 400,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("remonte une ApiError portant le statut quand la réponse n'est pas ok", async () => {
@@ -140,69 +162,24 @@ describe("filterDatasets", () => {
   });
 });
 
-describe("fetchDatasetResults", () => {
-  it("interroge la recherche par langue quand la langue est le seul critère", async () => {
-    const fetchMock = stubJsonResponse(sampleSearchResponse);
+describe("getDataset", () => {
+  it("appelle la fiche par identifiant (Story 1.12)", async () => {
+    const dataset = buildDataset({ id: 42 });
+    const fetchMock = stubJsonResponse(dataset);
 
-    const result = await fetchDatasetResults({ language: "yoruba" });
+    const result = await getDataset(42);
 
-    expect(calledUrl(fetchMock)).toBe(`${API_URL}/catalog/datasets/search?language=yoruba`);
-    expect(result).toEqual({ total: 1, datasets: sampleSearchResponse.datasets });
+    expect(calledUrl(fetchMock)).toBe(`${API_URL}/api/v1/datasets/42`);
+    expect(result).toEqual(dataset);
   });
 
-  it("bascule sur le filtrage dès qu'un filtre accompagne la langue", async () => {
-    const fetchMock = stubJsonResponse(sampleFilterResponse);
+  it("remonte une ApiError 404 pour un identifiant absent de l'index", async () => {
+    stubErrorResponse(404, "Dataset introuvable");
 
-    await fetchDatasetResults({ language: "swahili", task: "asr" });
-
-    expect(calledUrl(fetchMock)).toBe(
-      `${API_URL}/catalog/datasets/filter?language=swahili&task=asr`,
-    );
-  });
-
-  it.each([
-    ["source", { source: "kaggle" }, "source=kaggle"],
-    ["tâche", { task: "asr" }, "task=asr"],
-    ["format", { data_format: "audio" }, "data_format=audio"],
-  ])("interroge le filtrage avec le filtre %s seul, sans langue", async (_label, filters, query) => {
-    const fetchMock = stubJsonResponse(sampleFilterResponse);
-
-    await fetchDatasetResults(filters);
-
-    expect(calledUrl(fetchMock)).toBe(`${API_URL}/catalog/datasets/filter?${query}`);
-  });
-
-  it("combine tous les filtres actifs dans une seule requête (FR-12)", async () => {
-    const fetchMock = stubJsonResponse(sampleFilterResponse);
-
-    await fetchDatasetResults({
-      language: "swahili",
-      source: "kaggle",
-      task: "asr",
-      data_format: "text",
+    await expect(getDataset(999)).rejects.toMatchObject({
+      name: "ApiError",
+      status: 404,
     });
-
-    expect(calledUrl(fetchMock)).toBe(
-      `${API_URL}/catalog/datasets/filter?language=swahili&source=kaggle&task=asr&data_format=text`,
-    );
-  });
-
-  it("expose le total et les datasets de la réponse de filtrage", async () => {
-    const datasets = [buildDataset({ id: 7 }), buildDataset({ id: 8 })];
-    stubJsonResponse({ ...sampleFilterResponse, total: 2, datasets });
-
-    const result = await fetchDatasetResults({ source: "huggingface" });
-
-    expect(result).toEqual({ total: 2, datasets });
-  });
-
-  it("ne lance aucune requête quand aucun critère n'est fourni", async () => {
-    const fetchMock = stubJsonResponse(sampleFilterResponse);
-
-    const result = await fetchDatasetResults({});
-
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(result).toEqual({ total: 0, datasets: [] });
   });
 });
 
@@ -213,7 +190,7 @@ describe("getLanguageOverview", () => {
 
     const result = await getLanguageOverview("yoruba");
 
-    expect(calledUrl(fetchMock)).toBe(`${API_URL}/catalog/languages/overview?language=yoruba`);
+    expect(calledUrl(fetchMock)).toBe(`${API_URL}/api/v1/languages/overview?language=yoruba`);
     expect(result).toEqual(overview);
   });
 
@@ -223,7 +200,7 @@ describe("getLanguageOverview", () => {
     await getLanguageOverview("Yorùbá");
 
     expect(calledUrl(fetchMock)).toBe(
-      `${API_URL}/catalog/languages/overview?language=Yor%C3%B9b%C3%A1`,
+      `${API_URL}/api/v1/languages/overview?language=Yor%C3%B9b%C3%A1`,
     );
   });
 
