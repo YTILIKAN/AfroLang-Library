@@ -24,13 +24,33 @@ import {
 import { ApiError } from "@/lib/api/client";
 import {
   AdminDatasetCreateInput,
+  AdminDatasetUpdateInput,
   DatasetSummary,
   Provenance,
 } from "@/lib/types";
 
 const PROVENANCE_OPTIONS: Provenance[] = ["synchronisé", "contribué", "manuel"];
 
-const EMPTY_FORM: AdminDatasetCreateInput = {
+/** Sentinelle de métadonnée absente, commune à tout l'index (FR-8, Story 1.7). */
+const UNKNOWN = "inconnu";
+
+/** Champs texte facultatifs du contrat admin datasets (Story 4.1). */
+const OPTIONAL_FIELDS = ["description", "data_format", "size", "license_name"] as const;
+
+interface AdminDatasetForm {
+  title: string;
+  source_url: string;
+  language: string;
+  task: string;
+  provenance: Provenance;
+  source_slug: string;
+  description: string;
+  data_format: string;
+  size: string;
+  license_name: string;
+}
+
+const EMPTY_FORM: AdminDatasetForm = {
   title: "",
   source_url: "",
   language: "",
@@ -38,8 +58,104 @@ const EMPTY_FORM: AdminDatasetCreateInput = {
   provenance: "manuel",
   source_slug: "manual",
   description: "",
-  data_format: "text",
+  data_format: "",
+  size: "",
+  license_name: "",
 };
+
+/** Une métadonnée absente est stockée « inconnu » ; le formulaire l'affiche vide. */
+function displayValue(value: string | null | undefined): string {
+  return !value || value === UNKNOWN ? "" : value;
+}
+
+function formFromDataset(dataset: DatasetSummary): AdminDatasetForm {
+  return {
+    title: dataset.title,
+    source_url: dataset.source_url,
+    language: dataset.language.code,
+    task: dataset.tasks[0]?.code ?? "",
+    provenance: dataset.provenance,
+    source_slug: dataset.source.slug,
+    description: displayValue(dataset.description),
+    data_format: displayValue(dataset.data_format),
+    size: displayValue(dataset.size),
+    license_name: displayValue(dataset.license?.name),
+  };
+}
+
+function buildCreateInput(form: AdminDatasetForm): AdminDatasetCreateInput {
+  const input: AdminDatasetCreateInput = {
+    title: form.title.trim(),
+    source_url: form.source_url.trim(),
+    language: form.language.trim(),
+    task: form.task.trim(),
+    provenance: form.provenance,
+    source_slug: form.source_slug.trim() || "manual",
+  };
+
+  for (const field of OPTIONAL_FIELDS) {
+    const value = form[field].trim();
+    if (value) {
+      input[field] = value;
+    }
+  }
+
+  return input;
+}
+
+/**
+ * PATCH ne transporte que ce que l'admin a réellement modifié : un champ laissé tel quel
+ * n'est pas envoyé, sinon le serveur écraserait la valeur existante — y compris les tâches
+ * secondaires, remplacées dès que `task` est fourni (contrat 4.1).
+ */
+function buildUpdateInput(form: AdminDatasetForm, original: DatasetSummary): AdminDatasetUpdateInput {
+  const base = formFromDataset(original);
+  const patch: AdminDatasetUpdateInput = {};
+
+  if (form.title.trim() !== base.title) {
+    patch.title = form.title.trim();
+  }
+  if (form.source_url.trim() !== base.source_url) {
+    patch.source_url = form.source_url.trim();
+  }
+  if (form.language.trim() !== base.language) {
+    patch.language = form.language.trim();
+  }
+  if (form.task.trim() !== base.task) {
+    patch.task = form.task.trim();
+  }
+  if (form.provenance !== base.provenance) {
+    patch.provenance = form.provenance;
+  }
+  if (form.source_slug.trim() !== base.source_slug) {
+    patch.source_slug = form.source_slug.trim();
+  }
+
+  for (const field of OPTIONAL_FIELDS) {
+    const value = form[field].trim();
+    if (value === base[field]) {
+      continue;
+    }
+    // Champ vidé volontairement : on repose la sentinelle plutôt qu'une chaîne vide.
+    patch[field] = value || UNKNOWN;
+  }
+
+  return patch;
+}
+
+function matchesQuery(dataset: DatasetSummary, query: string): boolean {
+  const haystack = [
+    dataset.title,
+    dataset.language.name,
+    dataset.language.code,
+    dataset.source.name,
+    dataset.source.slug,
+    dataset.provenance,
+  ]
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(query);
+}
 
 interface DatasetAdminPanelProps {
   onLogout: () => void;
@@ -51,16 +167,25 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<AdminDatasetCreateInput>(EMPTY_FORM);
+  const [editing, setEditing] = useState<DatasetSummary | null>(null);
+  const [form, setForm] = useState<AdminDatasetForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
 
-  const isEditing = editingId !== null;
+  const isEditing = editing !== null;
 
   const sortedDatasets = useMemo(
     () => [...datasets].sort((a, b) => a.title.localeCompare(b.title, "fr")),
     [datasets],
   );
+
+  const visibleDatasets = useMemo(() => {
+    const folded = query.trim().toLowerCase();
+    if (!folded) {
+      return sortedDatasets;
+    }
+    return sortedDatasets.filter((dataset) => matchesQuery(dataset, folded));
+  }, [sortedDatasets, query]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,30 +229,20 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
   }
 
   function openCreateForm() {
-    setEditingId(null);
+    setEditing(null);
     setForm(EMPTY_FORM);
     setFormOpen(true);
   }
 
   function openEditForm(dataset: DatasetSummary) {
-    setEditingId(dataset.id);
-    setForm({
-      title: dataset.title,
-      source_url: dataset.source_url,
-      language: dataset.language.code,
-      task: dataset.tasks[0]?.code ?? "inconnu",
-      provenance: dataset.provenance,
-      source_slug: dataset.source.slug,
-      description: dataset.description === "inconnu" ? "" : dataset.description,
-      data_format: dataset.data_format === "inconnu" ? "" : dataset.data_format,
-      size: dataset.size === "inconnu" ? "" : dataset.size,
-    });
+    setEditing(dataset);
+    setForm(formFromDataset(dataset));
     setFormOpen(true);
   }
 
   function closeForm() {
     setFormOpen(false);
-    setEditingId(null);
+    setEditing(null);
     setForm(EMPTY_FORM);
   }
 
@@ -137,10 +252,13 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
     setError(null);
 
     try {
-      if (isEditing && editingId !== null) {
-        await updateAdminDataset(editingId, form);
+      if (editing !== null) {
+        const patch = buildUpdateInput(form, editing);
+        if (Object.keys(patch).length > 0) {
+          await updateAdminDataset(editing.id, patch);
+        }
       } else {
-        await createAdminDataset(form);
+        await createAdminDataset(buildCreateInput(form));
       }
       closeForm();
       await refreshDatasets();
@@ -259,10 +377,38 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
             </label>
 
             <label className="space-y-2">
+              <span className={labelMono}>Source (slug)</span>
+              <input
+                required
+                value={form.source_slug}
+                onChange={(event) => setForm({ ...form, source_slug: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+
+            <label className="space-y-2">
               <span className={labelMono}>Format</span>
               <input
-                value={form.data_format ?? ""}
+                value={form.data_format}
                 onChange={(event) => setForm({ ...form, data_format: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className={labelMono}>Taille</span>
+              <input
+                value={form.size}
+                onChange={(event) => setForm({ ...form, size: event.target.value })}
+                className={inputClass}
+              />
+            </label>
+
+            <label className="space-y-2 sm:col-span-2">
+              <span className={labelMono}>Licence</span>
+              <input
+                value={form.license_name}
+                onChange={(event) => setForm({ ...form, license_name: event.target.value })}
                 className={inputClass}
               />
             </label>
@@ -271,12 +417,19 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
               <span className={labelMono}>Description</span>
               <textarea
                 rows={3}
-                value={form.description ?? ""}
+                value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
                 className={inputClass}
               />
             </label>
           </div>
+
+          {editing && editing.tasks.length > 1 ? (
+            <p className="font-serif text-sm text-slate">
+              Ce dataset porte plusieurs tâches ({editing.tasks.map((task) => task.label).join(", ")}) ;
+              modifier le champ « Tâche NLP » les remplacera toutes par la valeur saisie.
+            </p>
+          ) : null}
 
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className={btnDark}>
@@ -289,11 +442,23 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
         </form>
       ) : null}
 
+      <label className="flex flex-col gap-2">
+        <span className={labelMono}>Filtrer la liste (titre, langue, source, origine)</span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="yoruba, huggingface, manuel…"
+          className={`${inputClass} sm:max-w-md`}
+        />
+      </label>
+
       <section className={`overflow-hidden ${cardElevated}`}>
         {loading ? (
           <p className="font-serif text-sm text-slate">Chargement des datasets…</p>
         ) : sortedDatasets.length === 0 ? (
           <p className="font-serif text-sm text-slate">Aucun dataset dans l&apos;index.</p>
+        ) : visibleDatasets.length === 0 ? (
+          <p className="font-serif text-sm text-slate">Aucun dataset ne correspond au filtre.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
@@ -308,14 +473,14 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
                 </tr>
               </thead>
               <tbody>
-                {sortedDatasets.map((dataset) => (
+                {visibleDatasets.map((dataset) => (
                   <tr key={dataset.id} className="border-b border-hairline last:border-none">
                     <td className="px-4 py-3 font-serif text-sm font-medium text-ink-black">{dataset.title}</td>
                     <td className="px-4 py-3 font-serif text-sm text-graphite">
                       {dataset.language.name} ({dataset.language.code})
                     </td>
                     <td className="px-4 py-3 font-serif text-sm text-graphite">
-                      {dataset.tasks.map((task) => task.label).join(", ") || "inconnu"}
+                      {dataset.tasks.map((task) => task.label).join(", ") || UNKNOWN}
                     </td>
                     <td className="px-4 py-3">
                       <span className={tagClass}>{dataset.provenance}</span>
@@ -332,10 +497,20 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <button type="button" onClick={() => openEditForm(dataset)} className={btnGhostDanger}>
+                        <button
+                          type="button"
+                          onClick={() => openEditForm(dataset)}
+                          className={btnGhostDanger}
+                          aria-label={`Modifier ${dataset.title}`}
+                        >
                           Modifier
                         </button>
-                        <button type="button" onClick={() => void handleDelete(dataset)} className={btnGhostDanger}>
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(dataset)}
+                          className={btnGhostDanger}
+                          aria-label={`Supprimer ${dataset.title}`}
+                        >
                           Supprimer
                         </button>
                       </div>
@@ -349,7 +524,10 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
       </section>
 
       <p className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
-        {sortedDatasets.length} dataset{sortedDatasets.length > 1 ? "s" : ""} — API /accounts/admin/datasets
+        {visibleDatasets.length === sortedDatasets.length
+          ? `${sortedDatasets.length} dataset${sortedDatasets.length > 1 ? "s" : ""}`
+          : `${visibleDatasets.length} / ${sortedDatasets.length} datasets`}{" "}
+        — API /accounts/admin/datasets
       </p>
     </div>
   );

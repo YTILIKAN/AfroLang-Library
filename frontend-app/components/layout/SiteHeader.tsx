@@ -50,8 +50,6 @@ export function SiteHeader() {
 
   const { account, loading, logout } = useAuth();
 
-  const isAdminRoute = pathname.startsWith("/admin");
-
 
 
   return (
@@ -104,7 +102,7 @@ export function SiteHeader() {
 
           })}
 
-          {account?.role === "admin" || isAdminRoute
+          {account?.role === "admin"
 
             ? ADMIN_NAV.map((item) => {
 

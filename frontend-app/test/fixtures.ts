@@ -1,4 +1,17 @@
-import { DatasetSummary, LanguageOverviewResponse } from "@/lib/types";
+import { Account, DatasetSummary, LanguageOverviewResponse } from "@/lib/types";
+
+/** Compte de référence, calqué sur le bouchon backend (`accounts/stub.py`). */
+export function buildAccount(overrides: Partial<Account> = {}): Account {
+  return {
+    id: 1,
+    email: "awa@university.org",
+    display_name: "Awa Ndiaye",
+    role: "chercheur",
+    is_active: true,
+    created_at: "2026-03-15T00:00:00Z",
+    ...overrides,
+  };
+}
 
 /** Fiche de référence, calquée sur le bouchon backend (`catalog/stub.py`). */
 export function buildDataset(overrides: Partial<DatasetSummary> = {}): DatasetSummary {

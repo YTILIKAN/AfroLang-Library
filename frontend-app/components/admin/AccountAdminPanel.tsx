@@ -254,6 +254,7 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                           void handleRoleChange(account, event.target.value as AccountRole)
                         }
                         className={selectClass}
+                        aria-label={`Rôle de ${account.display_name}`}
                       >
                         {ROLE_OPTIONS.map((role) => (
                           <option key={role} value={role}>
@@ -271,6 +272,7 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                         onClick={() => void handleToggleActive(account)}
                         disabled={account.id === currentAccountId && account.is_active}
                         className={`${btnGhost} disabled:cursor-not-allowed`}
+                        aria-label={`${account.is_active ? "Désactiver" : "Réactiver"} ${account.display_name}`}
                       >
                         {account.is_active ? "Désactiver" : "Réactiver"}
                       </button>

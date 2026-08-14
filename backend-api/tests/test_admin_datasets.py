@@ -167,6 +167,66 @@ def test_admin_can_delete_synchronised_dataset(admin_client) -> None:
     assert delete.status_code == 200
 
 
+def _seed_multitask_dataset(engine) -> int:
+    """Un dataset portant deux tâches — cas que l'ingestion produit couramment."""
+    from core.schemas import DatasetInput, LanguageInput, SourceInput
+    from ingestion.service import IngestionService
+
+    with Session(engine) as session:
+        dataset = IngestionService(session).persist_dataset(
+            DatasetInput(
+                external_id="manual/multi-taches",
+                title="Corpus multi-tâches",
+                source=SourceInput(slug="manual", name="Manual"),
+                language=LanguageInput(code="yor", name="Yoruba"),
+                language_raw="Yoruba",
+                provenance="manuel",
+                source_url="https://example.org/multi",
+                task_codes=["asr", "nmt"],
+                task_tags_raw="asr, nmt",
+            )
+        )
+        return dataset.id
+
+
+def test_admin_update_preserves_other_tasks(admin_client) -> None:
+    """Un PATCH sans `task` ne doit pas réduire le dataset à sa première tâche."""
+    client, engine = admin_client
+    _register(client, "admin4@example.com")
+    _promote_to_admin(engine, "admin4@example.com")
+    token = _login(client, "admin4@example.com")
+    headers = {"Authorization": f"Bearer {token}"}
+    dataset_id = _seed_multitask_dataset(engine)
+
+    update = client.patch(
+        f"/accounts/admin/datasets/{dataset_id}",
+        headers=headers,
+        json={"title": "Corpus multi-tâches (corrigé)"},
+    )
+
+    assert update.status_code == 200
+    assert {task["code"] for task in update.json()["tasks"]} == {"asr", "nmt"}
+
+
+def test_admin_update_task_replaces_the_task_list(admin_client) -> None:
+    """En revanche, une tâche explicitement saisie remplace bien les tâches existantes."""
+    client, engine = admin_client
+    _register(client, "admin5@example.com")
+    _promote_to_admin(engine, "admin5@example.com")
+    token = _login(client, "admin5@example.com")
+    headers = {"Authorization": f"Bearer {token}"}
+    dataset_id = _seed_multitask_dataset(engine)
+
+    update = client.patch(
+        f"/accounts/admin/datasets/{dataset_id}",
+        headers=headers,
+        json={"task": "classification"},
+    )
+
+    assert update.status_code == 200
+    assert [task["code"] for task in update.json()["tasks"]] == ["classification"]
+
+
 def test_stub_admin_dataset_crud(stub_admin) -> None:
     client = TestClient(app)
     token = client.post(
@@ -194,3 +254,40 @@ def test_stub_admin_dataset_crud(stub_admin) -> None:
 
     delete = client.delete(f"/accounts/admin/datasets/{dataset_id}", headers=headers)
     assert delete.status_code == 200
+
+
+def test_stub_admin_dataset_partial_update(stub_admin) -> None:
+    """Le bouchon applique bien un PATCH partiel, champ par champ (contrat 4.1)."""
+    client = TestClient(app)
+    token = client.post(
+        "/accounts/auth/login",
+        json={"email": "admin@afriland.org", "password": "admin123"},
+    ).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    created = client.post(
+        "/accounts/admin/datasets",
+        headers=headers,
+        json={
+            "title": "Stub Patch Dataset",
+            "source_url": "https://example.org/stub-patch",
+            "language": "wol",
+            "task": "nmt",
+            "data_format": "text",
+        },
+    ).json()
+
+    update = client.patch(
+        f"/accounts/admin/datasets/{created['id']}",
+        headers=headers,
+        json={"data_format": "audio", "size": "1.2 GB", "license_name": "CC BY 4.0"},
+    )
+
+    assert update.status_code == 200
+    body = update.json()
+    assert body["data_format"] == "audio"
+    assert body["size"] == "1.2 GB"
+    assert body["license"]["name"] == "CC BY 4.0"
+    assert body["title"] == "Stub Patch Dataset"
+
+    client.delete(f"/accounts/admin/datasets/{created['id']}", headers=headers)

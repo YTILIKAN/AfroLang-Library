@@ -154,9 +154,11 @@ export interface AdminDatasetCreateInput {
   task: string;
   provenance?: Provenance;
   source_slug?: string;
+  source_name?: string;
   description?: string;
   data_format?: string;
   size?: string;
+  license_name?: string;
   external_id?: string;
 }
 
@@ -166,9 +168,12 @@ export interface AdminDatasetUpdateInput {
   language?: string;
   task?: string;
   provenance?: Provenance;
+  source_slug?: string;
+  source_name?: string;
   description?: string;
   data_format?: string;
   size?: string;
+  license_name?: string;
 }
 
 export interface AdminAccountsListResponse {
