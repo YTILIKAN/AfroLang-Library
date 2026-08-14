@@ -1,4 +1,4 @@
-import { Account, DatasetSummary, LanguageOverviewResponse } from "@/lib/types";
+import { Account, DatasetDetail, DatasetSummary, LanguageOverviewResponse } from "@/lib/types";
 
 /** Compte de référence, calqué sur le bouchon backend (`accounts/stub.py`). */
 export function buildAccount(overrides: Partial<Account> = {}): Account {
@@ -34,6 +34,16 @@ export function buildDataset(overrides: Partial<DatasetSummary> = {}): DatasetSu
     source_url: "https://huggingface.co/datasets/masakhane/yoruba-asr",
     tasks: [{ code: "asr", label: "ASR" }],
     published_at: "2024-03-15T00:00:00Z",
+    ...overrides,
+  };
+}
+
+/** Fiche détaillée : le résumé, plus les horodatages d'indexation. */
+export function buildDatasetDetail(overrides: Partial<DatasetDetail> = {}): DatasetDetail {
+  return {
+    ...buildDataset(),
+    created_at: "2026-04-02T00:00:00Z",
+    updated_at: "2026-06-18T00:00:00Z",
     ...overrides,
   };
 }

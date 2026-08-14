@@ -12,6 +12,7 @@ describe("DatasetCard", () => {
     expect(screen.getByText("ASR")).toBeInTheDocument();
     expect(screen.getByText("audio")).toBeInTheDocument();
     expect(screen.getByText("2.5 GB")).toBeInTheDocument();
+    expect(screen.getByText("CC BY 4.0")).toBeInTheDocument();
   });
 
   it("affiche « inconnu » quand aucune tâche n'est renseignée (AC 1.7)", () => {
@@ -20,10 +21,10 @@ describe("DatasetCard", () => {
     expect(screen.getByText("inconnu")).toBeInTheDocument();
   });
 
-  it("affiche « inconnu » pour un format et une taille vides", () => {
-    render(<DatasetCard dataset={buildDataset({ data_format: "", size: "" })} />);
+  it("affiche « inconnu » pour un format, une taille et une licence absents", () => {
+    render(<DatasetCard dataset={buildDataset({ data_format: "", size: "", license: null })} />);
 
-    expect(screen.getAllByText("inconnu")).toHaveLength(2);
+    expect(screen.getAllByText("inconnu")).toHaveLength(3);
   });
 
   it("mène à la fiche interne du dataset (Story 1.12)", () => {

@@ -47,6 +47,20 @@ describe("DatasetFilterForm", () => {
     );
   });
 
+  it("propose les deux origines de contribution en plus des connecteurs", async () => {
+    const user = userEvent.setup();
+    render(<DatasetFilterForm />);
+
+    // `contribution` (source dotée d'une API) et `manual` (source sans API, FR-5) sont les
+    // slugs posés par contributor_service : sans eux, un dataset soumis par un chercheur
+    // n'est pas filtrable par source.
+    await user.selectOptions(screen.getByLabelText("Source"), "contribution");
+    await user.click(screen.getByRole("button", { name: /Appliquer les filtres/i }));
+
+    expect(push).toHaveBeenCalledWith("/filter?source=contribution");
+    expect(screen.getByRole("option", { name: "Manuel" })).toBeInTheDocument();
+  });
+
   it("refuse une soumission sans aucun critère et n'appelle pas l'API", async () => {
     const user = userEvent.setup();
     render(<DatasetFilterForm />);
