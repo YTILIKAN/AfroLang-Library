@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     catalog_stub: bool = False
     catalog_auto_seed: bool = True
     accounts_stub: bool = False
+    accounts_auto_seed: bool = True
+    admin_seed_email: str = "admin@afriland.org"
+    admin_seed_password: str = "admin123"
+    admin_seed_display_name: str = "Admin AfroLang"
     auth_secret_key: str = "dev-change-me-in-production"
     auth_token_ttl_hours: int = 24
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"

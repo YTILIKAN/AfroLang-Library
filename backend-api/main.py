@@ -5,8 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 
 from catalog.routes import PUBLIC_API_VERSION, catalog_router, public_router
-from catalog.seed import seed_catalog_if_empty
+from catalog.seed import seed_catalog
 from accounts.routes import router as accounts_router
+from accounts.seed import seed_admin_if_missing
 from core.config import get_settings
 from core.database import get_engine, init_db
 from core.logging import setup_logging
@@ -28,9 +29,16 @@ async def lifespan(app: FastAPI):
     setup_logging()
     init_db()
     settings = get_settings()
+    if not settings.accounts_stub and settings.accounts_auto_seed:
+        with Session(get_engine()) as session:
+            seed_admin_if_missing(session, settings)
     if settings.catalog_auto_seed and not settings.catalog_stub:
         with Session(get_engine()) as session:
-            seed_catalog_if_empty(session)
+            inserted = seed_catalog(session)
+            if inserted:
+                from core.logging import get_logger
+
+                get_logger(__name__).info("Seed catalogue : %s dataset(s) synchronisé(s)", inserted)
     yield
 
 
