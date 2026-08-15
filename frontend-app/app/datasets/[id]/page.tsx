@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 import { DatasetDetailView } from "@/components/catalog/DatasetDetailView";
-import { pageShell, sectionGap } from "@/components/ui/styles";
+import { CatalogNav } from "@/components/layout/CatalogNav";
+import { WorkflowShell } from "@/components/layout/WorkflowShell";
 import { getDataset } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 
@@ -30,14 +29,8 @@ export default async function DatasetPage({ params }: DatasetPageProps) {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader />
-
-      <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
-        <DatasetDetailView dataset={dataset} />
-      </main>
-
-      <SiteFooter />
-    </div>
+    <WorkflowShell sidebar={<CatalogNav />}>
+      <DatasetDetailView dataset={dataset} />
+    </WorkflowShell>
   );
 }

@@ -1,10 +1,15 @@
 import Link from "next/link";
 
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { DatasetCard } from "@/components/catalog/DatasetCard";
+import { DatasetList } from "@/components/catalog/DatasetRow";
 import { LanguageSearchForm, languageOverviewPath } from "@/components/catalog/LanguageSearchForm";
-import { pageShell, sectionGap, accentBar, headingDisplay } from "@/components/ui/styles";
+import { CatalogNav } from "@/components/layout/CatalogNav";
+import {
+  EmptyState,
+  ErrorBanner,
+  ResultSummary,
+  WorkflowHeader,
+  WorkflowShell,
+} from "@/components/layout/WorkflowShell";
 import { searchDatasets } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 
@@ -28,79 +33,44 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader />
+    <WorkflowShell sidebar={<CatalogNav />}>
+      <div className="space-y-8">
+        <WorkflowHeader
+          eyebrow="Catalogue"
+          title="Recherche par langue"
+          description="Code ISO 639-3 ou alias — Yoruba, yor, Wolof, Swahili…"
+        />
 
-      <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
-        <div className="max-w-3xl space-y-4">
-          <div className={accentBar} aria-hidden />
-          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-terracotta">
-            Catalogue public
-          </p>
-          <h1 className={headingDisplay}>Recherche par langue</h1>
-          <p className="font-serif text-sm leading-relaxed text-slate">
-            Code ISO 639-3 ou alias — Yoruba, yor, Wolof, Swahili… (FR-11, Story 1.12).
-          </p>
-          <Link
-            href="/filter"
-            className="inline-block font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-schematic-blue hover:underline"
-          >
-            Filtrer par source, tâche ou format →
-          </Link>
-        </div>
-
-        <div className="mt-10 max-w-xl">
+        <div className="rounded-sm border border-hairline bg-pure-white p-4">
           <LanguageSearchForm defaultLanguage={query} compact />
         </div>
 
         {!query ? (
-          <p className="mt-12 font-serif text-sm text-slate">
-            Saisissez une langue pour afficher les datasets correspondants.
-          </p>
+          <EmptyState message="Saisissez une langue pour afficher les datasets correspondants." />
         ) : error ? (
-          <div className="mt-12 border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">
-            {error}
-          </div>
+          <ErrorBanner message={error} />
         ) : result ? (
-          <section className="mt-12 space-y-8">
-            <div className="border-b border-hairline pb-6">
-              <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-slate">
-                Requête · {result.language_query}
-              </p>
-              <p className="mt-2 font-serif text-[26px] font-normal leading-[1.23] text-ink-black">
-                {result.total} dataset{result.total > 1 ? "s" : ""}{" "}
-                {result.language_code !== "inconnu" ? (
-                  <>
-                    pour <span className="font-medium">{result.language_code}</span>
-                  </>
-                ) : (
-                  <>— langue non reconnue</>
-                )}
-              </p>
-              {result.language_code !== "inconnu" ? (
-                <Link
-                  href={languageOverviewPath(result.language_query)}
-                  className="mt-3 inline-block font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-schematic-blue hover:underline"
-                >
-                  Page langue →
-                </Link>
-              ) : null}
-            </div>
-
+          <section className="space-y-4">
+            <ResultSummary
+              label={`Requête · ${result.language_query}${result.language_code !== "inconnu" ? ` (${result.language_code})` : ""}`}
+              count={result.total}
+            />
+            {result.language_code !== "inconnu" ? (
+              <Link
+                href={languageOverviewPath(result.language_query)}
+                className="inline-block font-mono-ui text-[10px] uppercase tracking-wide text-indigo-deep hover:text-terracotta"
+              >
+                Vue langue →
+              </Link>
+            ) : null}
             {result.datasets.length === 0 ? (
-              <p className="font-serif text-sm text-slate">Aucun dataset pour cette langue.</p>
+              <EmptyState message="Aucun dataset pour cette langue." />
             ) : (
-              <div className="grid gap-10">
-                {result.datasets.map((dataset) => (
-                  <DatasetCard key={dataset.id} dataset={dataset} />
-                ))}
-              </div>
+              <DatasetList datasets={result.datasets} />
             )}
           </section>
         ) : null}
-      </main>
-
-      <SiteFooter />
-    </div>
+      </div>
+    </WorkflowShell>
   );
 }

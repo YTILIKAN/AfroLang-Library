@@ -1,13 +1,14 @@
-from sqlalchemy import text
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
+
 from core.language_codes import resolve_language_code
 from core.models import Dataset, DatasetTaskLink, Language, Source, Task
+from core.search import search_datasets as search_datasets_fulltext
 
 
 
 class CatalogRepository:
-    """Lecture du catalogue via l'ORM — aucun SQL métier en dehors de FTS5."""
+    """Lecture du catalogue via l'ORM — recherche déléguée à core.search."""
 
     def __init__(self, session: Session) -> None:
         self.session = session
@@ -96,29 +97,4 @@ class CatalogRepository:
         return list(self.session.exec(select(Language)).all())
 
     def search_datasets(self, query: str, *, limit: int = 50) -> list[Dataset]:
-        if self.session.bind is not None and self.session.bind.dialect.name != "sqlite":
-            statement = select(Dataset).where(
-                Dataset.title.contains(query) | Dataset.description.contains(query)
-            )
-            return list(self.session.exec(statement.limit(limit)).all())
-
-        rows = self.session.execute(
-            text(
-                """
-                SELECT dataset_id
-                FROM dataset_fts
-                WHERE dataset_fts MATCH :query
-                LIMIT :limit
-                """
-            ),
-            {"query": query, "limit": limit},
-        ).all()
-        dataset_ids = [row[0] for row in rows]
-        if not dataset_ids:
-            return []
-
-        statement = select(Dataset).where(Dataset.id.in_(dataset_ids))
-        datasets = list(self.session.exec(statement).all())
-        order = {dataset_id: index for index, dataset_id in enumerate(dataset_ids)}
-        datasets.sort(key=lambda dataset: order.get(dataset.id, 0))
-        return datasets
+        return search_datasets_fulltext(self.session, query, limit=limit)

@@ -2,16 +2,18 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/layout/AdminShell";
+import { ErrorBanner, WorkflowHeader } from "@/components/layout/WorkflowShell";
 import {
   btnDark,
   btnGhost,
   btnOrange,
-  cardElevated,
   inputClass,
   labelMono,
-  pageShell,
+  panelClass,
   selectClass,
+  tableCellClass,
+  tableHeadClass,
   tagClass,
 } from "@/components/ui/styles";
 import {
@@ -133,36 +135,26 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
   }
 
   return (
-    <div className={`${pageShell} flex flex-col gap-8 py-10`}>
-      <header className="flex flex-col gap-6 border-b border-hairline pb-8">
-        <AdminNav active="accounts" />
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className={labelMono}>Administration</p>
-            <h1 className="mt-2 text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
-              Comptes utilisateurs
-            </h1>
-            <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
-              Connecté en tant que {adminName} — gestion des rôles (FR-20, Story 4.4).
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setFormOpen((open) => !open)} className={btnOrange}>
-              {formOpen ? "Fermer le formulaire" : "Créer un compte"}
-            </button>
-            <button type="button" onClick={onLogout} className={btnGhost}>
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </header>
+    <AdminShell
+      active="accounts"
+      adminName={adminName}
+      onLogout={onLogout}
+      actions={
+        <button type="button" onClick={() => setFormOpen((open) => !open)} className={btnOrange}>
+          {formOpen ? "Fermer" : "Créer un compte"}
+        </button>
+      }
+    >
+      <WorkflowHeader
+        eyebrow="Administration"
+        title="Comptes utilisateurs"
+        description="Création, attribution de rôles et activation des comptes."
+      />
 
-      {error ? (
-        <div className="border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">{error}</div>
-      ) : null}
+      {error ? <ErrorBanner message={error} /> : null}
 
       {formOpen ? (
-        <form onSubmit={handleCreate} className={`grid gap-4 sm:grid-cols-2 ${cardElevated}`}>
+        <form onSubmit={handleCreate} className={`grid gap-4 p-5 sm:grid-cols-2 ${panelClass}`}>
           <h2 className="font-mono-ui text-sm font-medium uppercase tracking-[0.012em] text-ink-black sm:col-span-2">
             Nouveau compte
           </h2>
@@ -223,15 +215,15 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
         </form>
       ) : null}
 
-      <section className={`overflow-hidden ${cardElevated}`}>
+      <section className={`overflow-hidden ${panelClass}`}>
         {loading ? (
-          <p className="font-serif text-sm text-slate">Chargement des comptes…</p>
+          <p className="p-4 font-serif text-sm text-slate">Chargement…</p>
         ) : sortedAccounts.length === 0 ? (
-          <p className="font-serif text-sm text-slate">Aucun compte enregistré.</p>
+          <p className="p-4 font-serif text-sm text-slate">Aucun compte enregistré.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="border-b border-hairline font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
+              <thead className={tableHeadClass}>
                 <tr>
                   <th className="px-4 py-3 font-medium">Nom</th>
                   <th className="px-4 py-3 font-medium">E-mail</th>
@@ -283,9 +275,9 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
         )}
       </section>
 
-      <p className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
-        {sortedAccounts.length} compte{sortedAccounts.length > 1 ? "s" : ""} — API /accounts/admin/accounts
+      <p className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
+        {sortedAccounts.length} compte{sortedAccounts.length > 1 ? "s" : ""}
       </p>
-    </div>
+    </AdminShell>
   );
 }

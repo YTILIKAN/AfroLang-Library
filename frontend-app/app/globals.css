@@ -83,28 +83,6 @@ body {
   background-position: 0 0, 0 12px, 12px -12px, -12px 0;
 }
 
-/* Hero — dégradé savane → indigo */
-.hero-african {
-  background: linear-gradient(145deg, var(--color-indigo-deep) 0%, #2a2218 42%, var(--color-ink-black) 100%);
-}
-
-.footer-dither {
-  background-color: var(--color-ink-black);
-  background-image: radial-gradient(circle, rgb(196 146 10 / 0.25) 1px, transparent 1px),
-    radial-gradient(circle, rgb(61 107 53 / 0.15) 1px, transparent 1px);
-  background-size: 6px 6px, 12px 12px;
-  background-position: 0 0, 3px 3px;
-}
-
-.data-stream-column {
-  animation: stream-drift 28s linear infinite;
-}
-
-@keyframes stream-drift {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-50%);
-  }
+.index-preview {
+  font-feature-settings: "tnum" 1;
 }

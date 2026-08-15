@@ -8,7 +8,7 @@ from catalog.routes import PUBLIC_API_VERSION, catalog_router, public_router
 from catalog.seed import seed_catalog_if_empty
 from accounts.routes import router as accounts_router
 from core.config import get_settings
-from core.database import engine, init_db
+from core.database import get_engine, init_db
 from core.logging import setup_logging
 
 PUBLIC_API_DESCRIPTION = """
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     init_db()
     settings = get_settings()
     if settings.catalog_auto_seed and not settings.catalog_stub:
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             seed_catalog_if_empty(session)
     yield
 

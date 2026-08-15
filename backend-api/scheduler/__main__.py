@@ -2,7 +2,7 @@
 
 from sqlmodel import Session
 
-from core.database import engine, init_db
+from core.database import get_engine, init_db
 from core.logging import setup_logging
 from ingestion import models as ingestion_models  # noqa: F401 — enregistre sync_log
 from ingestion.connectors.huggingface import HuggingFaceConnector
@@ -16,7 +16,7 @@ def main() -> None:
 
     connectors = [HuggingFaceConnector(), KaggleConnector()]
 
-    with Session(engine) as session:
+    with Session(get_engine()) as session:
         logs = IngestionService(session).run_all(connectors)
 
         for log in logs:
