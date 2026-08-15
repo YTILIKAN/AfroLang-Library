@@ -1,4 +1,4 @@
-import { API_URL } from "./config";
+import { getServerApiUrl } from "./config";
 import { DatasetSummary, LanguageOverviewResponse } from "./types";
 
 const PREVIEW_LANGUAGES = ["Yoruba", "Wolof", "Swahili"] as const;
@@ -15,7 +15,7 @@ export async function loadCatalogPreview(): Promise<CatalogPreview> {
     PREVIEW_LANGUAGES.map(async (language) => {
       try {
         const response = await fetch(
-          `${API_URL}/api/v1/languages/overview?${new URLSearchParams({ language })}`,
+          `${getServerApiUrl()}/api/v1/languages/overview?${new URLSearchParams({ language })}`,
           { next: { revalidate: 120 } },
         );
         if (!response.ok) {
