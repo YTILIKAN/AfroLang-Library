@@ -6,9 +6,9 @@ import { FormEvent, useState } from "react";
 import {
   btnDark,
   btnGhost,
-  cardElevated,
   inputClass,
   labelMono,
+  panelClass,
   selectClass,
 } from "@/components/ui/styles";
 import { submitDataset } from "@/lib/api/accounts";
@@ -89,12 +89,11 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
 
   if (success) {
     return (
-      <div className={`max-w-xl space-y-4 ${cardElevated}`}>
+      <div className={`max-w-xl space-y-4 p-5 ${panelClass}`}>
         <p className={labelMono}>Soumission enregistrée</p>
-        <h2 className="text-[26px] font-medium leading-[1.23] text-ink-black">{success.title}</h2>
-        <p className="font-serif text-sm leading-relaxed text-slate">
-          Dataset #{success.id} — provenance {success.provenance}. Visible dans l&apos;index après
-          traitement (bouchon : liste « mes datasets »).
+        <h2 className="font-display text-xl font-medium text-ink-black">{success.title}</h2>
+        <p className="font-serif text-sm text-slate">
+          Dataset #{success.id} — provenance {success.provenance}. Consultable dans « Mes datasets ».
         </p>
         <div className="flex flex-wrap gap-2">
           <Link href="/contribute/mine" className={btnDark}>
@@ -113,12 +112,12 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`max-w-2xl space-y-6 ${cardElevated}`}>
-      <div>
-        <p className={labelMono}>Contribution</p>
-        <h2 className="mt-2 text-[26px] font-medium leading-[1.23] text-ink-black">Soumettre un dataset</h2>
-        <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
-          Métadonnées + lien source — provenance rattachée à votre compte (FR-17, Story 3.5).
+    <form onSubmit={handleSubmit} className={`max-w-2xl space-y-6 p-5 ${panelClass}`}>
+      <div className="border-b border-hairline pb-4">
+        <p className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-graphite">Contribution</p>
+        <h2 className="mt-1 font-display text-xl font-medium text-ink-black">Soumettre un dataset</h2>
+        <p className="mt-2 font-serif text-sm text-slate">
+          Métadonnées et lien source — provenance rattachée à votre compte.
         </p>
       </div>
 

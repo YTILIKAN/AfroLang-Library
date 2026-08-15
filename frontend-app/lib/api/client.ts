@@ -1,4 +1,4 @@
-import { API_URL } from "../config";
+import { getApiBaseUrl } from "../config";
 import { getStoredToken } from "../auth-storage";
 
 export class ApiError extends Error {
@@ -16,6 +16,22 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
   auth?: boolean;
 }
 
+function formatApiError(payload: unknown, fallback: string): string {
+  if (typeof payload === "object" && payload !== null && "detail" in payload) {
+    const { detail } = payload as { detail?: unknown };
+    if (typeof detail === "string") {
+      return detail;
+    }
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0] as { msg?: string };
+      if (typeof first?.msg === "string") {
+        return first.msg;
+      }
+    }
+  }
+  return fallback;
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, auth = false, headers, ...rest } = options;
   const requestHeaders = new Headers(headers);
@@ -31,20 +47,38 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    headers: requestHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const baseUrl = getApiBaseUrl();
+  let response: Response;
+
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      ...rest,
+      headers: requestHeaders,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new ApiError(
+      `Impossible de joindre l'API (${baseUrl}). Vérifiez que le backend tourne et que API_URL est configuré.`,
+      0,
+    );
+  }
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  const payload = await response.json().catch(() => ({}));
+  const raw = await response.text();
+  let payload: unknown = {};
+  if (raw) {
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      payload = { detail: raw };
+    }
+  }
 
   if (!response.ok) {
-    const detail = typeof payload.detail === "string" ? payload.detail : "Erreur API";
+    const detail = formatApiError(payload, `Erreur API (${response.status})`);
     throw new ApiError(detail, response.status);
   }
 

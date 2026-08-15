@@ -62,26 +62,35 @@ export const cardElevated =
 
 export const pageShell = "mx-auto w-full max-w-[1200px] px-6";
 
+export const sectionGap = "py-12 lg:py-14";
 
+export const workflowGrid = "grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12";
 
-export const sectionGap = "py-20";
+export const panelClass =
+  "rounded-sm border border-hairline bg-pure-white";
 
+export const panelHeaderClass =
+  "border-b border-hairline px-4 py-3";
 
+export const navLinkClass =
+  "block rounded-sm px-3 py-2 font-mono-ui text-[10px] font-medium uppercase tracking-[0.1em] transition";
+
+export const navLinkActiveClass =
+  `${navLinkClass} bg-savanna text-ink-black`;
+
+export const navLinkIdleClass =
+  `${navLinkClass} text-slate hover:bg-savanna/60 hover:text-ink-black`;
+
+export const tableHeadClass =
+  "border-b border-hairline font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate";
+
+export const tableCellClass = "px-4 py-3 font-serif text-sm text-ink-black";
 
 export const headingDisplay =
-
-  "font-display text-[36px] font-medium leading-[1.11] tracking-[0.02em] text-ink-black";
-
-
+  "font-display text-[1.75rem] font-medium leading-[1.15] tracking-[-0.01em] text-ink-black sm:text-[2rem]";
 
 export const headingLead =
-
-  "text-[26px] font-normal leading-[1.23] tracking-[0.012em] text-ink-black";
-
-
+  "font-serif text-base leading-relaxed text-slate";
 
 export const accentBar =
-
-  "h-1 w-12 rounded-full bg-gradient-to-r from-kente-red via-ochre to-forest";
-
-
+  "h-px w-10 bg-terracotta";

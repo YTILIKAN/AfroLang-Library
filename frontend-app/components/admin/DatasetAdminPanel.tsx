@@ -2,17 +2,19 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminShell } from "@/components/layout/AdminShell";
+import { ErrorBanner, WorkflowHeader } from "@/components/layout/WorkflowShell";
 import {
   btnDark,
   btnGhost,
   btnGhostDanger,
   btnOrange,
-  cardElevated,
   inputClass,
   labelMono,
-  pageShell,
+  panelClass,
   selectClass,
+  tableCellClass,
+  tableHeadClass,
   tagClass,
 } from "@/components/ui/styles";
 import {
@@ -285,36 +287,26 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
   }
 
   return (
-    <div className={`${pageShell} flex flex-col gap-8 py-10`}>
-      <header className="flex flex-col gap-6 border-b border-hairline pb-8">
-        <AdminNav active="datasets" />
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className={labelMono}>Administration</p>
-            <h1 className="mt-2 text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
-              Datasets de l&apos;index
-            </h1>
-            <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
-              Connecté en tant que {adminName} — CRUD global (FR-19, Story 4.3).
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={openCreateForm} className={btnOrange}>
-              Ajouter un dataset
-            </button>
-            <button type="button" onClick={onLogout} className={btnGhost}>
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </header>
+    <AdminShell
+      active="datasets"
+      adminName={adminName}
+      onLogout={onLogout}
+      actions={
+        <button type="button" onClick={openCreateForm} className={btnOrange}>
+          Ajouter un dataset
+        </button>
+      }
+    >
+      <WorkflowHeader
+        eyebrow="Administration"
+        title="Datasets de l'index"
+        description="CRUD global sur toutes les entrées du catalogue."
+      />
 
-      {error ? (
-        <div className="border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">{error}</div>
-      ) : null}
+      {error ? <ErrorBanner message={error} /> : null}
 
       {formOpen ? (
-        <form onSubmit={handleSubmit} className={`grid gap-4 ${cardElevated}`}>
+        <form onSubmit={handleSubmit} className={`grid gap-4 p-5 ${panelClass}`}>
           <h2 className="font-mono-ui text-sm font-medium uppercase tracking-[0.012em] text-ink-black">
             {isEditing ? "Modifier le dataset" : "Nouveau dataset"}
           </h2>
@@ -442,50 +434,38 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
         </form>
       ) : null}
 
-      <label className="flex flex-col gap-2">
-        <span className={labelMono}>Filtrer la liste (titre, langue, source, origine)</span>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="yoruba, huggingface, manuel…"
-          className={`${inputClass} sm:max-w-md`}
-        />
-      </label>
-
-      <section className={`overflow-hidden ${cardElevated}`}>
+      <section className={`overflow-hidden ${panelClass}`}>
         {loading ? (
-          <p className="font-serif text-sm text-slate">Chargement des datasets…</p>
+          <p className="p-4 font-serif text-sm text-slate">Chargement…</p>
         ) : sortedDatasets.length === 0 ? (
-          <p className="font-serif text-sm text-slate">Aucun dataset dans l&apos;index.</p>
-        ) : visibleDatasets.length === 0 ? (
-          <p className="font-serif text-sm text-slate">Aucun dataset ne correspond au filtre.</p>
+          <p className="p-4 font-serif text-sm text-slate">Aucun dataset dans l&apos;index.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="border-b border-hairline font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
+              <thead className={tableHeadClass}>
                 <tr>
-                  <th className="px-4 py-3 font-medium">Titre</th>
-                  <th className="px-4 py-3 font-medium">Langue</th>
-                  <th className="px-4 py-3 font-medium">Tâches</th>
-                  <th className="px-4 py-3 font-medium">Provenance</th>
-                  <th className="px-4 py-3 font-medium">Source</th>
-                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                  <th className={`${tableCellClass} font-mono-ui text-[10px] font-medium uppercase text-slate`}>Titre</th>
+                  <th className={`${tableCellClass} font-mono-ui text-[10px] font-medium uppercase text-slate`}>Langue</th>
+                  <th className={`${tableCellClass} font-mono-ui text-[10px] font-medium uppercase text-slate`}>Tâches</th>
+                  <th className={`${tableCellClass} font-mono-ui text-[10px] font-medium uppercase text-slate`}>Provenance</th>
+                  <th className={`${tableCellClass} font-mono-ui text-[10px] font-medium uppercase text-slate`}>Source</th>
+                  <th className={`${tableCellClass} text-right font-mono-ui text-[10px] font-medium uppercase text-slate`}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {visibleDatasets.map((dataset) => (
                   <tr key={dataset.id} className="border-b border-hairline last:border-none">
-                    <td className="px-4 py-3 font-serif text-sm font-medium text-ink-black">{dataset.title}</td>
-                    <td className="px-4 py-3 font-serif text-sm text-graphite">
+                    <td className={`${tableCellClass} font-medium`}>{dataset.title}</td>
+                    <td className={`${tableCellClass} text-graphite`}>
                       {dataset.language.name} ({dataset.language.code})
                     </td>
-                    <td className="px-4 py-3 font-serif text-sm text-graphite">
-                      {dataset.tasks.map((task) => task.label).join(", ") || UNKNOWN}
+                    <td className={`${tableCellClass} text-graphite`}>
+                      {dataset.tasks.map((task) => task.label).join(", ") || "inconnu"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={tableCellClass}>
                       <span className={tagClass}>{dataset.provenance}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={tableCellClass}>
                       <a
                         href={dataset.source_url}
                         target="_blank"
@@ -495,7 +475,7 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
                         Ouvrir
                       </a>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className={`${tableCellClass} text-right`}>
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
@@ -523,12 +503,9 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
         )}
       </section>
 
-      <p className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
-        {visibleDatasets.length === sortedDatasets.length
-          ? `${sortedDatasets.length} dataset${sortedDatasets.length > 1 ? "s" : ""}`
-          : `${visibleDatasets.length} / ${sortedDatasets.length} datasets`}{" "}
-        — API /accounts/admin/datasets
+      <p className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
+        {sortedDatasets.length} entrée{sortedDatasets.length > 1 ? "s" : ""}
       </p>
-    </div>
+    </AdminShell>
   );
 }

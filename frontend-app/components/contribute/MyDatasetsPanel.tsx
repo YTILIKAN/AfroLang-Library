@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
+import { WorkflowHeader } from "@/components/layout/WorkflowShell";
 import {
   btnDark,
   btnGhostDanger,
   btnOrange,
-  cardElevated,
   inputClass,
-  labelMono,
-  pageShell,
+  panelClass,
+  tableCellClass,
+  tableHeadClass,
   tagClass,
 } from "@/components/ui/styles";
 import { deleteMyDataset, listMyDatasets, updateMyDataset } from "@/lib/api/accounts";
@@ -108,31 +109,23 @@ export function MyDatasetsPanel() {
   }
 
   return (
-    <div className={`${pageShell} space-y-8`}>
-      <header className="max-w-3xl space-y-4">
-        <Link
-          href="/contribute"
-          className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-slate hover:text-ink-black"
-        >
-          ← Espace contribution
-        </Link>
-        <p className={labelMono}>Mes contributions</p>
-        <h1 className="text-[36px] font-medium leading-[1.11] tracking-[0.012em] text-ink-black">
-          Mes datasets
-        </h1>
-        <p className="font-serif text-sm leading-relaxed text-slate">
-          Uniquement vos soumissions — modification et retrait (FR-18, Story 3.6).
-        </p>
-        <Link href="/contribute/submit" className={`inline-flex ${btnOrange}`}>
-          Nouvelle soumission
-        </Link>
-      </header>
+    <div className="space-y-6">
+      <WorkflowHeader
+        eyebrow="Contribution"
+        title="Mes datasets"
+        description="Uniquement vos soumissions — modification et retrait."
+        actions={
+          <Link href="/contribute/submit" className={btnOrange}>
+            Nouvelle soumission
+          </Link>
+        }
+      />
 
       {error ? (
-        <div className="border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">{error}</div>
+        <div className="border border-kente-red/20 bg-kente-red/5 px-4 py-3 font-serif text-sm">{error}</div>
       ) : null}
 
-      <section className={cardElevated}>
+      <section className={`overflow-hidden ${panelClass}`}>
         {loading ? (
           <p className="font-serif text-sm text-slate">Chargement…</p>
         ) : datasets.length === 0 ? (
@@ -145,7 +138,7 @@ export function MyDatasetsPanel() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="border-b border-hairline font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
+              <thead className={tableHeadClass}>
                 <tr>
                   <th className="px-4 py-3 font-medium">Titre</th>
                   <th className="px-4 py-3 font-medium">Langue</th>
@@ -224,8 +217,8 @@ export function MyDatasetsPanel() {
       </section>
 
       {!loading && datasets.length > 0 ? (
-        <p className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">
-          {datasets.length} contribution{datasets.length > 1 ? "s" : ""} — API /accounts/datasets/mine
+        <p className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
+          {datasets.length} contribution{datasets.length > 1 ? "s" : ""}
         </p>
       ) : null}
     </div>

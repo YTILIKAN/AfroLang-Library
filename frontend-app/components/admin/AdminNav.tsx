@@ -1,23 +1,30 @@
 import Link from "next/link";
 
+import { navLinkActiveClass, navLinkIdleClass } from "@/components/ui/styles";
+
 interface AdminNavProps {
   active: "datasets" | "accounts";
+  layout?: "horizontal" | "vertical";
 }
 
-export function AdminNav({ active }: AdminNavProps) {
+export function AdminNav({ active, layout = "horizontal" }: AdminNavProps) {
   const linkClass = (section: AdminNavProps["active"]) =>
-    section === active
-      ? "rounded-sm bg-ink-black px-3 py-2 font-mono-ui text-[11px] font-medium uppercase tracking-[0.015em] text-cream-paper"
-      : "rounded-sm border border-hairline px-3 py-2 font-mono-ui text-[11px] font-medium uppercase tracking-[0.015em] text-graphite transition hover:border-ink-black hover:text-ink-black";
+    section === active ? navLinkActiveClass : navLinkIdleClass;
 
-  return (
-    <nav className="flex flex-wrap gap-2">
+  const links = (
+    <>
       <Link href="/admin/datasets" className={linkClass("datasets")}>
         Datasets
       </Link>
       <Link href="/admin/accounts" className={linkClass("accounts")}>
         Comptes
       </Link>
-    </nav>
+    </>
   );
+
+  if (layout === "vertical") {
+    return <div className="flex flex-col gap-0.5">{links}</div>;
+  }
+
+  return <nav className="flex flex-wrap gap-2">{links}</nav>;
 }

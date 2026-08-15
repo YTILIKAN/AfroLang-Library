@@ -7,9 +7,9 @@ import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   btnOrange,
-  cardElevated,
   inputClass,
   labelMono,
+  panelClass,
 } from "@/components/ui/styles";
 import { login } from "@/lib/api/accounts";
 import { ApiError } from "@/lib/api/client";
@@ -45,15 +45,11 @@ export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`mx-auto w-full max-w-md space-y-6 ${cardElevated}`}>
-      <div>
+    <form onSubmit={handleSubmit} className={`mx-auto w-full max-w-md space-y-5 p-6 ${panelClass}`}>
+      <div className="border-b border-hairline pb-4">
         <p className={labelMono}>Administration</p>
-        <h2 className="mt-2 text-[26px] font-medium leading-[1.23] tracking-[0.012em] text-ink-black">
-          Connexion admin
-        </h2>
-        <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
-          Accès réservé aux comptes administrateurs (Story 4.3).
-        </p>
+        <h2 className="mt-1 font-display text-xl font-medium text-ink-black">Connexion admin</h2>
+        <p className="mt-2 font-serif text-sm text-slate">Accès réservé aux comptes administrateurs.</p>
       </div>
 
       <label className="block space-y-2">
@@ -124,15 +120,11 @@ export function ResearcherLoginForm({ redirectTo = "/contribute" }: ResearcherLo
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`mx-auto w-full max-w-md space-y-6 ${cardElevated}`}>
-      <div>
+    <form onSubmit={handleSubmit} className={`mx-auto w-full max-w-md space-y-5 p-6 ${panelClass}`}>
+      <div className="border-b border-hairline pb-4">
         <p className={labelMono}>Contribution</p>
-        <h2 className="mt-2 text-[26px] font-medium leading-[1.23] tracking-[0.012em] text-ink-black">
-          Connexion
-        </h2>
-        <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
-          Connectez-vous pour contribuer des datasets à l&apos;index (FR-16, Story 3.4).
-        </p>
+        <h2 className="mt-1 font-display text-xl font-medium text-ink-black">Connexion</h2>
+        <p className="mt-2 font-serif text-sm text-slate">Connectez-vous pour contribuer des datasets à l&apos;index.</p>
       </div>
 
       <label className="block space-y-2">
