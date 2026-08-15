@@ -1,7 +1,6 @@
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
+import { CatalogNav } from "@/components/layout/CatalogNav";
+import { ErrorBanner, WorkflowShell } from "@/components/layout/WorkflowShell";
 import { LanguageOverviewView } from "@/components/catalog/LanguageOverviewView";
-import { pageShell, sectionGap } from "@/components/ui/styles";
 import { getLanguageOverview } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 
@@ -15,13 +14,9 @@ export default async function LanguagePage({ params }: LanguagePageProps) {
 
   if (!languageQuery) {
     return (
-      <div className="flex min-h-full flex-col">
-        <SiteHeader />
-        <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
-          <p className="font-serif text-sm text-slate">Paramètre langue manquant.</p>
-        </main>
-        <SiteFooter />
-      </div>
+      <WorkflowShell sidebar={<CatalogNav />}>
+        <ErrorBanner message="Paramètre langue manquant." />
+      </WorkflowShell>
     );
   }
 
@@ -35,18 +30,8 @@ export default async function LanguagePage({ params }: LanguagePageProps) {
   }
 
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader />
-
-      <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
-        {error ? (
-          <div className="border border-hairline bg-fog px-4 py-3 font-serif text-sm text-ink-black">{error}</div>
-        ) : overview ? (
-          <LanguageOverviewView overview={overview} />
-        ) : null}
-      </main>
-
-      <SiteFooter />
-    </div>
+    <WorkflowShell sidebar={<CatalogNav />}>
+      {error ? <ErrorBanner message={error} /> : overview ? <LanguageOverviewView overview={overview} /> : null}
+    </WorkflowShell>
   );
 }

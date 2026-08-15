@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
-import { cardElevated, pageShell, sectionGap, tagClass, accentBar, headingDisplay } from "@/components/ui/styles";
+import { CatalogNav } from "@/components/layout/CatalogNav";
+import { WorkflowHeader, WorkflowShell } from "@/components/layout/WorkflowShell";
+import { tagClass } from "@/components/ui/styles";
 
 const FEATURED_LANGUAGES = [
   { label: "Yoruba", slug: "Yoruba" },
@@ -13,35 +13,26 @@ const FEATURED_LANGUAGES = [
 
 export default function LanguagesIndexPage() {
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader />
+    <WorkflowShell sidebar={<CatalogNav />}>
+      <div className="space-y-8">
+        <WorkflowHeader
+          eyebrow="Catalogue"
+          title="Explorer par langue"
+          description="Compteurs, tâches NLP couvertes et liste des datasets par langue."
+        />
 
-      <main className={`${pageShell} ${sectionGap} flex-1 pt-12`}>
-        <div className="max-w-3xl space-y-4">
-          <div className={accentBar} aria-hidden />
-          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-terracotta">
-            Catalogue public
-          </p>
-          <h1 className={headingDisplay}>Explorer par langue</h1>
-          <p className="font-serif text-sm leading-relaxed text-slate">
-            Vue d&apos;ensemble : compteurs, tâches NLP couvertes et liste des datasets (FR-14, Story 2.5).
-          </p>
+        <div className="rounded-sm border border-hairline bg-pure-white p-4">
+          <LanguageSearchForm mode="overview" submitLabel="Ouvrir" compact />
         </div>
 
-        <div className={`mt-10 max-w-xl ${cardElevated}`}>
-          <LanguageSearchForm mode="overview" submitLabel="Voir la page" compact />
-        </div>
-
-        <section className="mt-12 space-y-4">
-          <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.012em] text-slate">
-            Langues du bouchon
-          </p>
+        <section className="space-y-3">
+          <p className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Indexées</p>
           <ul className="flex flex-wrap gap-2">
             {FEATURED_LANGUAGES.map((item) => (
               <li key={item.slug}>
                 <Link
                   href={`/languages/${encodeURIComponent(item.slug)}`}
-                  className={`${tagClass} px-3 py-2 hover:border-ink-black`}
+                  className={`${tagClass} px-3 py-2 hover:border-graphite`}
                 >
                   {item.label}
                 </Link>
@@ -49,9 +40,7 @@ export default function LanguagesIndexPage() {
             ))}
           </ul>
         </section>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </div>
+    </WorkflowShell>
   );
 }

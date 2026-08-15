@@ -7,9 +7,9 @@ import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   btnOrange,
-  cardElevated,
   inputClass,
   labelMono,
+  panelClass,
 } from "@/components/ui/styles";
 import { login, register } from "@/lib/api/accounts";
 import { ApiError } from "@/lib/api/client";
@@ -43,14 +43,12 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`mx-auto w-full max-w-md space-y-6 ${cardElevated}`}>
-      <div>
+    <form onSubmit={handleSubmit} className={`mx-auto w-full max-w-md space-y-5 p-6 ${panelClass}`}>
+      <div className="border-b border-hairline pb-4">
         <p className={labelMono}>Contribution</p>
-        <h2 className="mt-2 text-[26px] font-medium leading-[1.23] tracking-[0.012em] text-ink-black">
-          Créer un compte
-        </h2>
-        <p className="mt-2 font-serif text-sm leading-relaxed text-slate">
-          Compte chercheur par défaut — consultation publique sans inscription (FR-16).
+        <h2 className="mt-1 font-display text-xl font-medium text-ink-black">Créer un compte</h2>
+        <p className="mt-2 font-serif text-sm text-slate">
+          Compte chercheur — la consultation publique reste accessible sans inscription.
         </p>
       </div>
 
