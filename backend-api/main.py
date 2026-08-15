@@ -58,6 +58,7 @@ def create_app() -> FastAPI:
         title="AfroLang-Library Public API",
         version=PUBLIC_API_VERSION,
         description=PUBLIC_API_DESCRIPTION,
+        lifespan=lifespan,
         openapi_tags=[
             {
                 "name": "public-api",
