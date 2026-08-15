@@ -17,6 +17,7 @@ from catalog.api_schemas import (
     DatasetDetailResponse,
     DatasetSummaryResponse,
     LanguageResponse,
+    LicenseResponse,
     SourceResponse,
     TaskResponse,
 )
@@ -167,7 +168,7 @@ def submit_dataset(account_id: int, payload: SubmitDatasetRequest) -> DatasetDet
         "title": payload.title,
         "language_code": payload.language,
         "source_url": payload.source_url,
-        "provenance": "contribué",
+        "provenance": "manuel" if payload.manual_source else "contribué",
         "tasks": [{"code": payload.task, "label": payload.task.upper()}],
         "description": payload.description or "inconnu",
         "data_format": payload.data_format or "inconnu",
@@ -282,7 +283,6 @@ def admin_get_dataset(dataset_id: int) -> DatasetDetailResponse:
 def admin_create_dataset(payload: AdminDatasetCreateRequest) -> DatasetDetailResponse:
     global _STUB_ADMIN_NEXT_ID
     _ensure_admin_datasets()
-    from catalog.api_schemas import LanguageResponse, SourceResponse, TaskResponse
 
     dataset = DatasetDetailResponse(
         id=_STUB_ADMIN_NEXT_ID,
@@ -292,7 +292,15 @@ def admin_create_dataset(payload: AdminDatasetCreateRequest) -> DatasetDetailRes
         language=LanguageResponse(code=payload.language[:3], name=payload.language, family="inconnu", region="inconnu"),
         language_raw=payload.language_raw or payload.language,
         source=SourceResponse(slug=payload.source_slug, name=payload.source_name or payload.source_slug, base_url="inconnu"),
-        license=None,
+        license=(
+            LicenseResponse(
+                name=payload.license_name,
+                spdx_id=payload.license_spdx_id,
+                url=payload.license_url or "inconnu",
+            )
+            if payload.license_name
+            else None
+        ),
         provenance=payload.provenance.value,
         data_format=payload.data_format or "inconnu",
         size=payload.size or "inconnu",
@@ -308,20 +316,53 @@ def admin_create_dataset(payload: AdminDatasetCreateRequest) -> DatasetDetailRes
 
 
 def admin_update_dataset(dataset_id: int, payload: AdminDatasetUpdateRequest) -> DatasetDetailResponse:
+    """PATCH partiel : seuls les champs transmis sont réécrits (contrat Story 4.1)."""
     _ensure_admin_datasets()
     for index, dataset in enumerate(_STUB_ADMIN_DATASETS):
         if dataset.id != dataset_id:
             continue
+
         updates = payload.model_dump(exclude_unset=True)
-        if "title" in updates:
-            dataset = dataset.model_copy(update={"title": updates["title"]})
-        if "description" in updates:
-            dataset = dataset.model_copy(update={"description": updates["description"]})
-        if "source_url" in updates:
-            dataset = dataset.model_copy(update={"source_url": updates["source_url"]})
-        if "provenance" in updates and updates["provenance"] is not None:
-            dataset = dataset.model_copy(update={"provenance": updates["provenance"].value})
-        dataset = dataset.model_copy(update={"updated_at": datetime.now(timezone.utc)})
+        changes: dict = {}
+
+        for field in ("title", "description", "source_url", "language_raw", "data_format", "size"):
+            if field in updates and updates[field] is not None:
+                changes[field] = updates[field]
+
+        if updates.get("provenance") is not None:
+            changes["provenance"] = updates["provenance"].value
+
+        if updates.get("language") is not None:
+            language = updates["language"]
+            changes["language"] = LanguageResponse(
+                code=language[:3],
+                name=updates.get("language_raw") or language,
+                family=dataset.language.family,
+                region=dataset.language.region,
+            )
+
+        if updates.get("task") is not None:
+            task = updates["task"]
+            changes["tasks"] = [TaskResponse(code=task, label=task.upper())]
+
+        if updates.get("source_slug") is not None or updates.get("source_name") is not None:
+            slug = updates.get("source_slug") or dataset.source.slug
+            changes["source"] = SourceResponse(
+                slug=slug,
+                name=updates.get("source_name") or slug,
+                base_url=dataset.source.base_url,
+            )
+
+        if any(updates.get(field) is not None for field in ("license_name", "license_spdx_id", "license_url")):
+            changes["license"] = LicenseResponse(
+                name=updates.get("license_name") or (dataset.license.name if dataset.license else "inconnu"),
+                spdx_id=updates.get("license_spdx_id")
+                or (dataset.license.spdx_id if dataset.license else None),
+                url=updates.get("license_url") or (dataset.license.url if dataset.license else "inconnu"),
+            )
+
+        changes["updated_at"] = datetime.now(timezone.utc)
+        dataset = dataset.model_copy(update=changes)
         _STUB_ADMIN_DATASETS[index] = dataset
         return dataset
     raise LookupError("Dataset introuvable")

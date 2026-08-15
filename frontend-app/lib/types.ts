@@ -30,6 +30,18 @@ export interface TaskInfo {
   label: string;
 }
 
+export interface SourceInfo {
+  slug: string;
+  name: string;
+  base_url: string;
+}
+
+export interface LicenseInfo {
+  name: string;
+  spdx_id: string | null;
+  url: string;
+}
+
 export interface DatasetSummary {
   id: number;
   external_id: string;
@@ -37,8 +49,8 @@ export interface DatasetSummary {
   description: string;
   language: LanguageInfo;
   language_raw: string;
-  source: { slug: string; name: string; base_url: string };
-  license: { name: string; spdx_id: string | null; url: string } | null;
+  source: SourceInfo;
+  license: LicenseInfo | null;
   provenance: Provenance;
   data_format: string;
   size: string;
@@ -52,6 +64,7 @@ export interface DatasetDetail extends DatasetSummary {
   updated_at: string;
 }
 
+/** Réponse de GET /api/v1/datasets/search (Story 1.11). */
 export interface DatasetSearchResponse {
   language_query: string;
   language_code: string;
@@ -59,6 +72,7 @@ export interface DatasetSearchResponse {
   datasets: DatasetSummary[];
 }
 
+/** Filtres appliqués après normalisation côté serveur (Story 2.1). */
 export interface AppliedFilters {
   language: string | null;
   language_code: string | null;
@@ -68,6 +82,7 @@ export interface AppliedFilters {
   data_format: string | null;
 }
 
+/** Réponse de GET /api/v1/datasets/filter (Story 2.1). */
 export interface DatasetFilterResponse {
   filters: AppliedFilters;
   total: number;
@@ -81,12 +96,14 @@ export interface DatasetFilterParams {
   data_format?: string;
 }
 
+/** Compteurs basiques pour une langue (FR-14). */
 export interface LanguageAggregationStats {
   dataset_count: number;
   task_count: number;
   tasks_covered: TaskInfo[];
 }
 
+/** Réponse de GET /api/v1/languages/overview (Story 2.2). */
 export interface LanguageOverviewResponse {
   language_query: string;
   language_code: string;
@@ -110,9 +127,11 @@ export interface SubmitDatasetInput {
   license_name?: string;
   data_format?: string;
   size?: string;
+  /** Source sans API publique : l'entrée reçoit l'origine `manuel` (FR-5). */
+  manual_source?: boolean;
 }
 
-export interface SubmitDatasetResult extends DatasetDetail {}
+export type SubmitDatasetResult = DatasetDetail;
 
 export interface MyDatasetsResponse {
   total: number;
@@ -135,9 +154,11 @@ export interface AdminDatasetCreateInput {
   task: string;
   provenance?: Provenance;
   source_slug?: string;
+  source_name?: string;
   description?: string;
   data_format?: string;
   size?: string;
+  license_name?: string;
   external_id?: string;
 }
 
@@ -147,9 +168,12 @@ export interface AdminDatasetUpdateInput {
   language?: string;
   task?: string;
   provenance?: Provenance;
+  source_slug?: string;
+  source_name?: string;
   description?: string;
   data_format?: string;
   size?: string;
+  license_name?: string;
 }
 
 export interface AdminAccountsListResponse {

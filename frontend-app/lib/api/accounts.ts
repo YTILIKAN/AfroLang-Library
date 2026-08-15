@@ -10,7 +10,6 @@ import {
   RegisterInput,
   SubmitDatasetInput,
   SubmitDatasetResult,
-  DatasetSummary,
   MyDatasetsResponse,
   UpdateMyDatasetInput,
   TokenResponse,

@@ -22,8 +22,8 @@ interface AdminLoginFormProps {
 
 export function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
   const { setAccount } = useAuth();
-  const [email, setEmail] = useState("admin@afriland.org");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

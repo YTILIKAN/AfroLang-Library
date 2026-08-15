@@ -59,22 +59,17 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
     setSuccess(null);
     setLoading(true);
 
+    // Une source sans API publique passe par le même endpoint : c'est le serveur qui lui
+    // donne l'origine `manuel` à partir de ce drapeau (FR-5, AD-15).
     const payload: SubmitDatasetInput = {
       title: form.title.trim(),
       source_url: form.source_url.trim(),
       language: form.language.trim(),
       task: form.task,
+      manual_source: noPublicApi,
     };
 
-    if (form.description?.trim()) {
-      const base = form.description.trim();
-      payload.description = noPublicApi
-        ? `${base}\n[Source sans API publique — référencement manuel]`
-        : base;
-    } else if (noPublicApi) {
-      payload.description = "Source sans API publique — référencement manuel (FR-5)";
-    }
-
+    if (form.description?.trim()) payload.description = form.description.trim();
     if (form.license_name?.trim()) payload.license_name = form.license_name.trim();
     if (form.data_format?.trim()) payload.data_format = form.data_format.trim();
     if (form.size?.trim()) payload.size = form.size.trim();

@@ -6,10 +6,16 @@ import { useRouter } from "next/navigation";
 import { btnDark, btnGhost, inputClass, labelMono, selectClass } from "@/components/ui/styles";
 import { DatasetFilterParams } from "@/lib/types";
 
+/**
+ * Slugs de source connus de l'index : les deux connecteurs (Stories 1.4 et 1.5) et les deux
+ * origines de contribution posées par `contributor_service` — `contribution` pour une source
+ * dotée d'une API, `manual` pour une source qui n'en a pas (FR-5, Story 3.2).
+ */
 const SOURCE_OPTIONS = [
   { value: "", label: "—" },
   { value: "huggingface", label: "Hugging Face" },
   { value: "kaggle", label: "Kaggle" },
+  { value: "contribution", label: "Contribution" },
   { value: "manual", label: "Manuel" },
 ];
 

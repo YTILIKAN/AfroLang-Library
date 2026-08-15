@@ -25,6 +25,10 @@ class ContributorDatasetService:
         self.admin_repository = AdminDatasetRepository(session)
 
     def submit(self, account: Account, payload: SubmitDatasetRequest) -> DatasetDetailResponse:
+        # Une source sans API publique est référencée par le même mécanisme, mais son
+        # origine reste `manuel` (FR-5) ; dans les deux cas la provenance est le compte
+        # contributeur, et l'ingestion automatique ne retire jamais ces entrées (AD-15).
+        manual = payload.manual_source
         admin_payload = AdminDatasetCreateRequest(
             title=payload.title,
             source_url=payload.source_url,
@@ -34,8 +38,8 @@ class ContributorDatasetService:
             license_name=payload.license_name,
             data_format=payload.data_format,
             size=payload.size,
-            provenance=Provenance.CONTRIBUE,
-            source_slug="contribution",
+            provenance=Provenance.MANUEL if manual else Provenance.CONTRIBUE,
+            source_slug="manual" if manual else "contribution",
             contributor_account_id=account.id,
         )
         return self.admin.create_dataset(admin_payload)

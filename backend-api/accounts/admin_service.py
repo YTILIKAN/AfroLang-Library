@@ -68,8 +68,12 @@ class AdminDatasetService:
     def _merge_update(self, existing, payload: AdminDatasetUpdateRequest) -> DatasetInput:
         language_query = payload.language or existing.language_code
         language_code = self._resolve_language_code(language_query)
-        task_query = payload.task or (existing.tasks[0].code if existing.tasks else "inconnu")
-        task_code = self._resolve_task_code(task_query)
+        # L'écriture remplace les liens de tâches (Story 1.8) : sans `task` explicite, on
+        # réécrit l'ensemble des tâches existantes plutôt que la seule première.
+        if payload.task:
+            task_codes = [self._resolve_task_code(payload.task)]
+        else:
+            task_codes = [task.code for task in existing.tasks] or [UNKNOWN]
 
         provenance = payload.provenance or existing.provenance
         source_slug = normalize_source_slug(payload.source_slug) if payload.source_slug else existing.source.slug
@@ -90,7 +94,7 @@ class AdminDatasetService:
             license=self._license_input(payload, existing),
             data_format=payload.data_format if payload.data_format is not None else existing.data_format,
             size=payload.size if payload.size is not None else existing.size,
-            task_codes=[task_code],
+            task_codes=task_codes,
             task_tags_raw=payload.task or existing.task_tags_raw,
             published_at=existing.published_at,
         )

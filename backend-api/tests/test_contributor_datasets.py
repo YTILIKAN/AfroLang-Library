@@ -70,20 +70,29 @@ def _login(client: TestClient, email: str) -> str:
     return response.json()["access_token"]
 
 
-def _submit(client: TestClient, token: str, title: str = "Corpus Twi") -> dict:
+def _submit(
+    client: TestClient,
+    token: str,
+    title: str = "Corpus Twi",
+    manual_source: bool | None = None,
+) -> dict:
+    payload = {
+        "title": title,
+        "source_url": "https://example.com/datasets/twi-corpus",
+        "language": "twi",
+        "task": "asr",
+        "description": "Corpus vocal twi",
+        "license_name": "CC BY 4.0",
+        "data_format": "audio",
+        "size": "500 MB",
+    }
+    if manual_source is not None:
+        payload["manual_source"] = manual_source
+
     response = client.post(
         "/accounts/datasets",
         headers={"Authorization": f"Bearer {token}"},
-        json={
-            "title": title,
-            "source_url": "https://example.com/datasets/twi-corpus",
-            "language": "twi",
-            "task": "asr",
-            "description": "Corpus vocal twi",
-            "license_name": "CC BY 4.0",
-            "data_format": "audio",
-            "size": "500 MB",
-        },
+        json=payload,
     )
     assert response.status_code == 201
     return response.json()
@@ -113,6 +122,41 @@ def test_contributor_submit_and_list_mine(contributor_client) -> None:
 
     catalog = client.get(f"/catalog/datasets/{created['id']}")
     assert catalog.status_code == 200
+
+
+def test_contributor_submit_without_manual_flag_defaults_to_contribue(contributor_client) -> None:
+    """Le drapeau est optionnel : son absence garde l'origine `contribué` (FR-17)."""
+    client, _engine = contributor_client
+    _register(client, "ama@example.com", "Ama")
+    token = _login(client, "ama@example.com")
+
+    created = _submit(client, token, manual_source=False)
+
+    assert created["provenance"] == "contribué"
+
+
+def test_contributor_submit_source_without_api_is_manuel(contributor_client) -> None:
+    """Une source sans API publique passe par le même endpoint, en origine `manuel` (FR-5)."""
+    client, engine = contributor_client
+    _register(client, "yaw@example.com", "Yaw")
+    token = _login(client, "yaw@example.com")
+
+    created = _submit(client, token, title="Archive Ewe", manual_source=True)
+
+    assert created["provenance"] == "manuel"
+
+    with Session(engine) as session:
+        row = session.get(Dataset, created["id"])
+        assert row is not None
+        assert row.provenance.value == "manuel"
+        # La provenance reste rattachée au compte contributeur (AD-15).
+        assert row.contributor_account_id is not None
+
+    mine = client.get("/accounts/datasets/mine", headers={"Authorization": f"Bearer {token}"})
+    assert mine.status_code == 200
+    body = mine.json()
+    assert body["total"] == 1
+    assert body["datasets"][0]["provenance"] == "manuel"
 
 
 def test_contributor_update_and_delete_own_dataset(contributor_client) -> None:

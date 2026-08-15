@@ -175,7 +175,10 @@ def get_me(
     response_model=DatasetDetailResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Soumettre un dataset",
-    description="Contribution chercheur — normalisation et provenance `contribué` (FR-17, Story 3.2).",
+    description=(
+        "Contribution chercheur — normalisation et provenance rattachée au compte (FR-17, Story 3.2). "
+        "Origine `contribué`, ou `manuel` si `manual_source` est vrai (source sans API, FR-5)."
+    ),
 )
 def submit_dataset(
     payload: SubmitDatasetRequest,

@@ -30,6 +30,10 @@ export function DatasetCard({ dataset }: DatasetCardProps) {
 
 
 
+  const license = displayValue(dataset.license?.name);
+
+
+
   const provenanceTag = dataset.provenance === "contribué" ? tagTerracotta : tagClass;
 
 
@@ -111,6 +115,18 @@ export function DatasetCard({ dataset }: DatasetCardProps) {
             <dd className={`font-serif text-sm ${isUnknown(dataset.size) ? "text-slate" : "text-ink-black"}`}>
 
               {displayValue(dataset.size)}
+
+            </dd>
+
+          </div>
+
+          <div>
+
+            <dt className="font-mono-ui text-[10px] uppercase tracking-[0.015em] text-slate">Licence</dt>
+
+            <dd className={`font-serif text-sm ${isUnknown(license) ? "text-slate" : "text-ink-black"}`}>
+
+              {license}
 
             </dd>
 
