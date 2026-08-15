@@ -25,9 +25,9 @@
   --color-concrete: #c9baa8;
   --color-clay: #e2d5c4;
 
-  --font-display: var(--font-fraunces), "Fraunces", Georgia, serif;
-  --font-serif: var(--font-source-serif), "Source Serif 4", Georgia, serif;
-  --font-mono-ui: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-mono-ui: "IBM Plex Mono", ui-monospace, monospace;
 
   --radius-sm: 2px;
   --radius-lg: 8px;
