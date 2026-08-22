@@ -55,6 +55,15 @@ class DatasetSearchResponse(BaseModel):
     datasets: list[DatasetSummaryResponse]
 
 
+class DatasetListResponse(BaseModel):
+    """Réponse de GET /api/v1/datasets — index complet en lecture seule."""
+
+    total: int
+    limit: int
+    offset: int
+    datasets: list[DatasetSummaryResponse]
+
+
 class DatasetDetailResponse(DatasetSummaryResponse):
     """Réponse de GET /catalog/datasets/{dataset_id}."""
 

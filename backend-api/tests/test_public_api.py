@@ -51,6 +51,18 @@ def public_api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         os.environ.pop(key, None)
 
 
+def test_public_api_list_datasets(public_api_client: TestClient) -> None:
+    response = public_api_client.get("/api/v1/datasets")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] >= 3
+    assert len(body["datasets"]) == body["total"]
+    assert body["limit"] == 100
+    assert body["offset"] == 0
+    for dataset in body["datasets"]:
+        assert dataset["source_url"].startswith("https://")
+
+
 def test_public_api_manifest(public_api_client: TestClient) -> None:
     response = public_api_client.get("/api/v1")
     assert response.status_code == 200

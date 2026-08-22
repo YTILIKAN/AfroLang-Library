@@ -26,10 +26,10 @@ const FOOTER_COLUMNS: {
     ],
   },
   {
-    title: "Administration",
+    title: "Compte",
     links: [
-      { label: "Datasets", href: "/admin/datasets" },
-      { label: "Comptes", href: "/admin/accounts" },
+      { label: "Connexion", href: "/auth/login" },
+      { label: "Inscription chercheur", href: "/auth/register" },
     ],
   },
 ];

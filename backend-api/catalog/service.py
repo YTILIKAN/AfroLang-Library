@@ -32,6 +32,13 @@ class CatalogService:
     def list_all_datasets(self) -> list[Dataset]:
         return self.repository.list_all_datasets()
 
+    def list_datasets(self, *, limit: int = 100, offset: int = 0) -> tuple[int, list[Dataset]]:
+        """Liste paginée de l'index complet (consultation publique)."""
+        all_datasets = self.repository.list_all_datasets()
+        total = len(all_datasets)
+        page = all_datasets[offset : offset + limit]
+        return total, page
+
     def list_datasets_for_language(self, language_code: str) -> list[Dataset]:
         return self.repository.list_datasets_by_language(language_code)
 
