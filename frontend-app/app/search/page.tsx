@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { DatasetList } from "@/components/catalog/DatasetRow";
-import { LanguageSearchForm, languageOverviewPath } from "@/components/catalog/LanguageSearchForm";
+import { languageOverviewPath } from "@/components/catalog/language-links";
+import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
 import { CatalogNav } from "@/components/layout/CatalogNav";
 import {
   EmptyState,
