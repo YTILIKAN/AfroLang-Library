@@ -12,11 +12,7 @@ const NAV = [
   { href: "/filter", label: "Filtres" },
   { href: "/languages", label: "Langues" },
   { href: "/contribute", label: "Contribuer", auth: true },
-  {
-    href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/docs`,
-    label: "API",
-    external: true,
-  },
+  { href: "/api-docs", label: "API" },
 ];
 
 const ADMIN_NAV = [

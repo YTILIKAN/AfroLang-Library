@@ -12,8 +12,7 @@ const FOOTER_COLUMNS: {
       { label: "Langues", href: "/languages" },
       {
         label: "API REST",
-        href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/api/v1`,
-        external: true,
+        href: "/api-docs",
       },
     ],
   },
