@@ -2,6 +2,7 @@ import {
   DatasetDetail,
   DatasetFilterParams,
   DatasetFilterResponse,
+  DatasetListResponse,
   DatasetSearchResponse,
   LanguageOverviewResponse,
 } from "../types";
@@ -12,6 +13,14 @@ const CATALOG_PREFIX = "/api/v1";
 
 /** Lecture publique de l'index : jamais mise en cache, jamais authentifiée (AD-3, AD-10). */
 const READ_ONLY = { cache: "no-store" } as const;
+
+export function listDatasets(limit = 100, offset = 0): Promise<DatasetListResponse> {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  return apiRequest<DatasetListResponse>(`${CATALOG_PREFIX}/datasets?${query.toString()}`, READ_ONLY);
+}
 
 export function searchDatasets(language: string): Promise<DatasetSearchResponse> {
   const query = new URLSearchParams({ language });

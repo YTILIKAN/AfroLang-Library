@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AfriLandLogo } from "@/components/layout/AfriLandLogo";
-import { btnDark, btnGhost, btnOrange } from "@/components/ui/styles";
+import { btnGhost, btnOrange } from "@/components/ui/styles";
 
 const NAV = [
+  { href: "/", label: "Accueil" },
   { href: "/search", label: "Recherche" },
   { href: "/filter", label: "Filtres" },
   { href: "/languages", label: "Langues" },
@@ -35,7 +36,8 @@ export function SiteHeader() {
             if (item.auth && !account) {
               return null;
             }
-            const isActive = pathname.startsWith(item.href);
+            const isActive =
+              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
             const linkClass = `relative font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] transition ${
               isActive ? "text-ink-black" : "text-slate hover:text-ink-black"
             }`;
@@ -49,7 +51,7 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          {account?.role === "admin" || isAdminRoute
+          {account?.role === "admin" && isAdminRoute
             ? ADMIN_NAV.map((item) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
@@ -57,12 +59,17 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     className={`relative font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] transition ${
-                      isActive ? "text-ink-black" : "text-slate hover:text-ink-black"
+                      isActive
+                        ? "text-ink-black"
+                        : "text-slate hover:text-ink-black"
                     }`}
                   >
                     {item.label}
                     {isActive ? (
-                      <span className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta" aria-hidden />
+                      <span
+                        className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta"
+                        aria-hidden
+                      />
                     ) : null}
                   </Link>
                 );
@@ -72,33 +79,29 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           {loading ? (
-            <span className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">…</span>
+            <span className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
+              …
+            </span>
           ) : account ? (
             <>
               <span className="hidden font-mono-ui text-[10px] uppercase tracking-[0.1em] text-graphite sm:inline">
                 {account.display_name}
               </span>
-              {account.role === "admin" ? (
-                <Link href="/admin/datasets" className={btnDark}>
-                  Admin
-                </Link>
-              ) : null}
               <Link href="/contribute" className={btnGhost}>
                 Contribuer
               </Link>
-              <button type="button" onClick={() => void logout()} className={btnGhost}>
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className={btnGhost}
+              >
                 Déconnexion
               </button>
             </>
           ) : (
-            <>
-              <Link href="/admin/datasets" className={btnGhost}>
-                Admin
-              </Link>
-              <Link href="/auth/login" className={btnOrange}>
-                Connexion
-              </Link>
-            </>
+            <Link href="/auth/login" className={btnOrange}>
+              Connexion
+            </Link>
           )}
         </div>
       </div>

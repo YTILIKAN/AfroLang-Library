@@ -3,20 +3,14 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { LanguageFormMode, buildLanguageHref } from "@/components/catalog/language-links";
 import { btnDark, inputClass, labelMono } from "@/components/ui/styles";
-
-type LanguageFormMode = "search" | "overview";
 
 interface LanguageSearchFormProps {
   defaultLanguage?: string;
   compact?: boolean;
   mode?: LanguageFormMode;
   submitLabel?: string;
-}
-
-function buildLanguageHref(mode: LanguageFormMode, language: string): string {
-  const encoded = encodeURIComponent(language);
-  return mode === "overview" ? `/languages/${encoded}` : `/search?language=${encoded}`;
 }
 
 export function LanguageSearchForm({
@@ -56,8 +50,4 @@ export function LanguageSearchForm({
       </button>
     </form>
   );
-}
-
-export function languageOverviewPath(language: string): string {
-  return buildLanguageHref("overview", language);
 }

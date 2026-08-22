@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 
 from catalog.routes import PUBLIC_API_VERSION, catalog_router, public_router
 from catalog.seed import seed_catalog
+from catalog.afrilang_inventory import seed_afrilang_inventory
 from accounts.routes import router as accounts_router
 from accounts.seed import seed_admin_if_missing
 from core.config import get_settings
@@ -136,6 +137,14 @@ async def lifespan(app: FastAPI):
                 inserted = seed_catalog(session)
                 if inserted:
                     logger.info("Seed catalogue : %s nouveau(x) dataset(s)", inserted)
+        if settings.afrilang_auto_seed and not settings.catalog_stub:
+            with Session(get_engine()) as session:
+                created, updated = seed_afrilang_inventory(session)
+                session.commit()
+                if created:
+                    logger.info("Inventaire Afrilang : %s nouveau(x) dataset(s)", created)
+                elif updated:
+                    logger.info("Inventaire Afrilang : %s dataset(s) synchronisé(s)", updated)
     except Exception:
         logger.exception("Échec du seed au démarrage")
         raise

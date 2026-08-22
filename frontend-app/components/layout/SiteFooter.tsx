@@ -22,10 +22,10 @@ const FOOTER_COLUMNS: {
     ],
   },
   {
-    title: "Administration",
+    title: "Compte",
     links: [
-      { label: "Datasets", href: "/admin/datasets" },
-      { label: "Comptes", href: "/admin/accounts" },
+      { label: "Connexion", href: "/auth/login" },
+      { label: "Inscription chercheur", href: "/auth/register" },
     ],
   },
 ];
@@ -33,7 +33,9 @@ const FOOTER_COLUMNS: {
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-hairline bg-savanna/40">
-      <div className={`mx-auto grid max-w-[1200px] gap-10 px-6 py-12 md:grid-cols-2 lg:grid-cols-4`}>
+      <div
+        className={`mx-auto grid max-w-[1200px] gap-10 px-6 py-12 md:grid-cols-2 lg:grid-cols-4`}
+      >
         {FOOTER_COLUMNS.map((column) => (
           <div key={column.title}>
             <h3 className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] text-graphite">
@@ -52,7 +54,10 @@ export function SiteFooter() {
                       {link.label}
                     </a>
                   ) : (
-                    <Link href={link.href} className="font-serif text-sm text-ink-black hover:text-indigo-deep">
+                    <Link
+                      href={link.href}
+                      className="font-serif text-sm text-ink-black hover:text-indigo-deep"
+                    >
                       {link.label}
                     </Link>
                   )}
@@ -65,7 +70,9 @@ export function SiteFooter() {
           <h3 className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] text-graphite">
             Projet
           </h3>
-          <p className="mt-3 font-serif text-sm text-slate">AfroLang-Library · Y&apos;TILiKAN</p>
+          <p className="mt-3 font-serif text-sm text-slate">
+            AfroLang-Library · Y&apos;TILiKAN
+          </p>
           <p className="mt-4 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
             NLP · langues africaines · open metadata
           </p>

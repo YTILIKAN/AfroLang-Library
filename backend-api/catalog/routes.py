@@ -7,10 +7,11 @@ from catalog.api_schemas import (
     ApiInfoResponse,
     DatasetDetailResponse,
     DatasetFilterResponse,
+    DatasetListResponse,
     DatasetSearchResponse,
     LanguageOverviewResponse,
 )
-from catalog.mappers import dataset_to_detail
+from catalog.mappers import dataset_to_detail, dataset_to_summary
 from catalog.service import CatalogService
 from core.config import Settings, get_settings
 from core.database import get_session
@@ -55,6 +56,11 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
                 endpoints=[
                     ApiEndpointInfo(
                         method="GET",
+                        path="/api/v1/datasets",
+                        description="Liste paginée de l'index complet (lecture seule).",
+                    ),
+                    ApiEndpointInfo(
+                        method="GET",
                         path="/api/v1/datasets/search",
                         description="Recherche de datasets par langue (code ISO 639-3 ou alias).",
                     ),
@@ -75,6 +81,33 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
                     ),
                 ],
             )
+
+    @router.get(
+        "/datasets",
+        response_model=DatasetListResponse,
+        summary="Lister l'index des datasets",
+        description=(
+            "Consultation publique de l'index complet, sans authentification (FR-15). "
+            "Pagination optionnelle via limit et offset."
+        ),
+    )
+    def list_datasets(
+        limit: int = Query(100, ge=1, le=500, description="Nombre maximum de résultats"),
+        offset: int = Query(0, ge=0, description="Décalage pour la pagination"),
+        settings: Settings = Depends(get_settings),
+        service: CatalogService = Depends(get_catalog_service),
+    ) -> DatasetListResponse:
+        if settings.catalog_stub:
+            total, datasets = catalog_stub.list_datasets(limit=limit, offset=offset)
+            return DatasetListResponse(total=total, limit=limit, offset=offset, datasets=datasets)
+
+        total, page = service.list_datasets(limit=limit, offset=offset)
+        return DatasetListResponse(
+            total=total,
+            limit=limit,
+            offset=offset,
+            datasets=[dataset_to_summary(dataset) for dataset in page],
+        )
 
     @router.get(
         "/datasets/search",

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { filterDatasets, getDataset, getLanguageOverview, searchDatasets } from "./catalog";
+import { filterDatasets, getDataset, getLanguageOverview, listDatasets, searchDatasets } from "./catalog";
 import { ApiError } from "./client";
 import type { DatasetFilterResponse, DatasetSearchResponse } from "../types";
 import { buildDataset, buildLanguageOverview } from "@/test/fixtures";
@@ -39,6 +39,22 @@ const sampleSearchResponse: DatasetSearchResponse = {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe("listDatasets", () => {
+  it("appelle l'index complet sans authentification", async () => {
+    const fetchMock = stubJsonResponse({
+      total: 2,
+      limit: 100,
+      offset: 0,
+      datasets: [buildDataset(), buildDataset({ id: 2, title: "Autre corpus" })],
+    });
+
+    const result = await listDatasets();
+
+    expect(calledUrl(fetchMock)).toBe(`${API_URL}/api/v1/datasets?limit=100&offset=0`);
+    expect(result.total).toBe(2);
+  });
 });
 
 describe("searchDatasets", () => {
