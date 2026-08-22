@@ -1,13 +1,26 @@
-const DEFAULT_API_URL = "http://127.0.0.1:8000";
+const LOCAL_API_URL = "http://127.0.0.1:8000";
+const PRODUCTION_API_URL = "https://afrilang-api.up.railway.app";
 
 function normalizeUrl(url: string): string {
   return url.replace(/\/$/, "");
 }
 
+function resolveConfiguredApiUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (process.env.API_URL) {
+    return process.env.API_URL;
+  }
+  if (process.env.NODE_ENV === "production") {
+    return PRODUCTION_API_URL;
+  }
+  return LOCAL_API_URL;
+}
+
 /** URL directe du backend (SSR, rewrites Next.js, liens docs). */
 export function getServerApiUrl(): string {
-  const raw = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
-  return normalizeUrl(raw);
+  return normalizeUrl(resolveConfiguredApiUrl());
 }
 
 /**
