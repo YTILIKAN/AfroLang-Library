@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     catalog_stub: bool = False
     catalog_auto_seed: bool = True
+    catalog_bootstrap_ingest: bool = True
     accounts_stub: bool = False
     accounts_auto_seed: bool = True
     admin_seed_email: str = "admin@afriland.org"

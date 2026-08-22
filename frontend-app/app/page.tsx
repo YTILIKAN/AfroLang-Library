@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { IndexPreviewStrip } from "@/components/home/IndexPreviewStrip";
 import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -22,8 +21,7 @@ const CAPABILITIES = [
   {
     title: "API REST v1",
     description: "Schémas stables en lecture seule — intégration directe dans vos pipelines.",
-    href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/docs`,
-    external: true,
+    href: "/api-docs",
   },
   {
     title: "Contribution",
@@ -104,8 +102,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <IndexPreviewStrip datasets={preview.datasets} />
-
       <section className={`${pageShell} py-14 lg:py-16`}>
         <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -134,23 +130,12 @@ export default async function Home() {
                 {item.title}
               </span>
               <p className="font-serif text-sm leading-relaxed text-slate">{item.description}</p>
-              {"external" in item && item.external ? (
-                <a
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono-ui text-[10px] uppercase tracking-wide text-indigo-deep hover:text-ink-black sm:text-right"
-                >
-                  Ouvrir ↗
-                </a>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="font-mono-ui text-[10px] uppercase tracking-wide text-indigo-deep hover:text-ink-black sm:text-right"
-                >
-                  Accéder →
-                </Link>
-              )}
+              <Link
+                href={item.href}
+                className="font-mono-ui text-[10px] uppercase tracking-wide text-indigo-deep hover:text-ink-black sm:text-right"
+              >
+                Accéder →
+              </Link>
             </li>
           ))}
         </ul>

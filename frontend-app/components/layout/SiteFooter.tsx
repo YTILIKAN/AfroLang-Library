@@ -10,11 +10,7 @@ const FOOTER_COLUMNS: {
       { label: "Recherche", href: "/search" },
       { label: "Filtrage", href: "/filter" },
       { label: "Langues", href: "/languages" },
-      {
-        label: "API REST",
-        href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/api/v1`,
-        external: true,
-      },
+      { label: "Documentation API", href: "/api-docs" },
     ],
   },
   {

@@ -3,7 +3,8 @@
 > Gouverné par FR-15, AD-3, AD-10. Surface stable pour développeurs externes et frontend.
 
 **Base URL (local)** : `http://127.0.0.1:8000/api/v1`  
-**OpenAPI** : http://127.0.0.1:8000/docs  
+**Documentation lecteur** : page `/api-docs` du frontend (rédigée, versionnée avec l'app)  
+**Schéma OpenAPI** : http://127.0.0.1:8000/openapi.json — explorateur : http://127.0.0.1:8000/docs  
 **Manifeste** : `GET /api/v1`
 
 Alias interne (même comportement) : `/catalog/*`

@@ -12,11 +12,7 @@ const NAV = [
   { href: "/filter", label: "Filtres" },
   { href: "/languages", label: "Langues" },
   { href: "/contribute", label: "Contribuer", auth: true },
-  {
-    href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/docs`,
-    label: "API",
-    external: true,
-  },
+  { href: "/api-docs", label: "API" },
 ];
 
 const ADMIN_NAV = [
@@ -39,24 +35,17 @@ export function SiteHeader() {
             if (item.auth && !account) {
               return null;
             }
-            const isActive = !item.external && pathname.startsWith(item.href);
+            const isActive = pathname.startsWith(item.href);
             const linkClass = `relative font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] transition ${
               isActive ? "text-ink-black" : "text-slate hover:text-ink-black"
             }`;
 
-            const activeMark = isActive ? (
-              <span className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta" aria-hidden />
-            ) : null;
-
-            return item.external ? (
-              <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                {item.label}
-                {activeMark}
-              </a>
-            ) : (
+            return (
               <Link key={item.href} href={item.href} className={linkClass}>
                 {item.label}
-                {activeMark}
+                {isActive ? (
+                  <span className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta" aria-hidden />
+                ) : null}
               </Link>
             );
           })}
