@@ -1,11 +1,16 @@
 import Link from "next/link";
 
-import { HomeCatalogSection } from "@/components/home/HomeCatalogSection";
 import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
+import {
+  HomeCatalogGrid,
+  HomeCatalogStats,
+  HomePublicCatalogProvider,
+} from "@/components/home/HomePublicCatalog";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { btnDark, btnGhost, pageShell } from "@/components/ui/styles";
-import { loadCatalogPreview } from "@/lib/catalog-preview";
+
+export const dynamic = "force-dynamic";
 
 const QUICK_LANGUAGES = [
   { label: "Yoruba", href: "/languages/Yoruba" },
@@ -34,15 +39,14 @@ const CAPABILITIES = [
   {
     title: "API REST v1",
     description: "Schémas stables en lecture seule — intégration directe dans vos pipelines.",
-    href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/docs`,
+    href: `${process.env.NEXT_PUBLIC_API_URL ?? "https://afrilang-api.up.railway.app"}/docs`,
     external: true,
   },
 ];
 
-export default async function Home() {
-  const preview = await loadCatalogPreview();
-
+export default function Home() {
   return (
+    <HomePublicCatalogProvider>
     <div className="flex min-h-full flex-col">
       <div className="kente-band" aria-hidden />
       <SiteHeader />
@@ -61,32 +65,7 @@ export default async function Home() {
               Parcourez l&apos;index sans créer de compte.
             </p>
 
-            <dl className="flex flex-wrap gap-x-10 gap-y-4 border-t border-hairline pt-6">
-              <div>
-                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Datasets</dt>
-                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
-                  {preview.loadError ? "—" : preview.total}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Langues</dt>
-                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
-                  {preview.loadError ? "—" : preview.languageCount}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Tâches</dt>
-                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
-                  {preview.loadError ? "—" : preview.taskCodes.length}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Sources</dt>
-                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
-                  {preview.loadError ? "—" : preview.sourceSlugs.length}
-                </dd>
-              </div>
-            </dl>
+            <HomeCatalogStats />
           </div>
 
           <div className="space-y-5 lg:pt-2">
@@ -116,11 +95,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeCatalogSection
-        datasets={preview.datasets}
-        total={preview.total}
-        loadError={preview.loadError}
-      />
+      <HomeCatalogGrid />
 
       <section className={`${pageShell} py-14 lg:py-16`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -171,5 +146,6 @@ export default async function Home() {
 
       <SiteFooter />
     </div>
+    </HomePublicCatalogProvider>
   );
 }

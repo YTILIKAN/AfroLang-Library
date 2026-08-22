@@ -8,9 +8,10 @@ interface HomeCatalogSectionProps {
   datasets: DatasetSummary[];
   total: number;
   loadError: boolean;
+  loading?: boolean;
 }
 
-export function HomeCatalogSection({ datasets, total, loadError }: HomeCatalogSectionProps) {
+export function HomeCatalogSection({ datasets, total, loadError, loading = false }: HomeCatalogSectionProps) {
   return (
     <section className="border-t border-hairline bg-savanna/30" aria-labelledby="catalog-heading">
       <div className="kente-band kente-band-md" aria-hidden />
@@ -41,9 +42,15 @@ export function HomeCatalogSection({ datasets, total, loadError }: HomeCatalogSe
           <div className="mt-10 rounded-sm border border-terracotta/30 bg-pure-white p-6">
             <p className="font-display text-lg text-ink-black">Catalogue momentanément indisponible</p>
             <p className="mt-2 font-serif text-sm text-slate">
-              L&apos;API backend ne répond pas. Vérifiez que le service est démarré et que{" "}
-              <code className="font-mono-ui text-[11px]">API_URL</code> pointe vers le bon backend.
+              L&apos;API backend ne répond pas. Vérifiez que{" "}
+              <code className="font-mono-ui text-[11px]">NEXT_PUBLIC_API_URL</code> pointe vers{" "}
+              <code className="font-mono-ui text-[11px]">https://afrilang-api.up.railway.app</code>.
             </p>
+          </div>
+        ) : loading ? (
+          <div className="mt-10 rounded-sm border border-hairline bg-pure-white p-8 text-center">
+            <p className="font-display text-lg text-ink-black">Chargement du catalogue…</p>
+            <p className="mt-2 font-serif text-sm text-slate">Récupération des datasets depuis l&apos;index public.</p>
           </div>
         ) : datasets.length === 0 ? (
           <div className="mt-10 rounded-sm border border-hairline bg-pure-white p-8 text-center">
