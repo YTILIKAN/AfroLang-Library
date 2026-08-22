@@ -41,11 +41,20 @@ export function SiteHeader() {
             }`;
 
             const activeMark = isActive ? (
-              <span className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta" aria-hidden />
+              <span
+                className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta"
+                aria-hidden
+              />
             ) : null;
 
             return item.external ? (
-              <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkClass}
+              >
                 {item.label}
                 {activeMark}
               </a>
@@ -64,12 +73,17 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     className={`relative font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] transition ${
-                      isActive ? "text-ink-black" : "text-slate hover:text-ink-black"
+                      isActive
+                        ? "text-ink-black"
+                        : "text-slate hover:text-ink-black"
                     }`}
                   >
                     {item.label}
                     {isActive ? (
-                      <span className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta" aria-hidden />
+                      <span
+                        className="absolute -bottom-3.5 left-0 h-px w-full bg-terracotta"
+                        aria-hidden
+                      />
                     ) : null}
                   </Link>
                 );
@@ -79,7 +93,9 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           {loading ? (
-            <span className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">…</span>
+            <span className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
+              …
+            </span>
           ) : account ? (
             <>
               <span className="hidden font-mono-ui text-[10px] uppercase tracking-[0.1em] text-graphite sm:inline">
@@ -93,7 +109,11 @@ export function SiteHeader() {
               <Link href="/contribute" className={btnGhost}>
                 Contribuer
               </Link>
-              <button type="button" onClick={() => void logout()} className={btnGhost}>
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className={btnGhost}
+              >
                 Déconnexion
               </button>
             </>
