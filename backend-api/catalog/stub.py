@@ -192,3 +192,11 @@ def get_language_overview(language_query: str) -> LanguageOverviewResponse:
 def list_all_datasets() -> list[DatasetDetailResponse]:
     """Liste complète pour le bouchon admin (Story 4.1)."""
     return list(_STUB_DATASETS)
+
+
+def list_datasets(*, limit: int = 100, offset: int = 0) -> tuple[int, list[DatasetSummaryResponse]]:
+    summaries = [
+        DatasetSummaryResponse.model_validate(dataset.model_dump()) for dataset in _STUB_DATASETS
+    ]
+    total = len(summaries)
+    return total, summaries[offset : offset + limit]

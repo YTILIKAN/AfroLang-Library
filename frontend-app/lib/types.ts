@@ -64,6 +64,14 @@ export interface DatasetDetail extends DatasetSummary {
   updated_at: string;
 }
 
+/** Réponse de GET /api/v1/datasets — index complet. */
+export interface DatasetListResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  datasets: DatasetSummary[];
+}
+
 /** Réponse de GET /api/v1/datasets/search (Story 1.11). */
 export interface DatasetSearchResponse {
   language_query: string;

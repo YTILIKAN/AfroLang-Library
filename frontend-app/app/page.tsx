@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { IndexPreviewStrip } from "@/components/home/IndexPreviewStrip";
+import { HomeCatalogSection } from "@/components/home/HomeCatalogSection";
 import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -11,29 +11,31 @@ const QUICK_LANGUAGES = [
   { label: "Yoruba", href: "/languages/Yoruba" },
   { label: "Wolof", href: "/languages/wol" },
   { label: "Swahili", href: "/languages/Swahili" },
+  { label: "Haoussa", href: "/languages/Hausa" },
+  { label: "Amharique", href: "/languages/amh" },
 ];
 
 const CAPABILITIES = [
   {
-    title: "Catalogue",
-    description: "Recherche par langue, filtrage combiné et fiches métadonnées avec lien source.",
+    title: "Recherche",
+    description: "Trouver des datasets par langue africaine — code ISO ou nom usuel.",
     href: "/search",
+  },
+  {
+    title: "Filtres",
+    description: "Combiner langue, source, tâche NLP et format de données.",
+    href: "/filter",
+  },
+  {
+    title: "Langues",
+    description: "Parcourir l'index langue par langue avec statistiques agrégées.",
+    href: "/languages",
   },
   {
     title: "API REST v1",
     description: "Schémas stables en lecture seule — intégration directe dans vos pipelines.",
     href: `${process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000"}/docs`,
     external: true,
-  },
-  {
-    title: "Contribution",
-    description: "Les chercheurs référencent leurs datasets avec traçabilité de provenance.",
-    href: "/contribute",
-  },
-  {
-    title: "Administration",
-    description: "CRUD global des entrées et gestion des comptes, réservé aux administrateurs.",
-    href: "/admin/datasets",
   },
 ];
 
@@ -42,46 +44,53 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-full flex-col">
+      <div className="kente-band" aria-hidden />
       <SiteHeader />
 
-      <section className="border-b border-hairline">
-        <div className={`${pageShell} grid gap-12 py-14 lg:grid-cols-[1fr_380px] lg:gap-16 lg:py-20`}>
-          <div className="max-w-xl space-y-6">
+      <section className="border-b border-hairline pattern-weave">
+        <div className={`${pageShell} grid gap-12 py-14 lg:grid-cols-[1fr_360px] lg:gap-16 lg:py-20`}>
+          <div className="max-w-2xl space-y-6">
             <p className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.16em] text-graphite">
               Y&apos;TILiKAN · AfroLang-Library
             </p>
-            <h1 className="font-display text-[2rem] font-medium leading-[1.12] tracking-[-0.01em] text-ink-black sm:text-[2.5rem]">
-              Index des datasets de langues africaines
+            <h1 className="font-display text-[2.125rem] font-medium leading-[1.1] tracking-[-0.02em] text-ink-black sm:text-[2.75rem]">
+              Datasets de langues africaines, accessibles dès l&apos;ouverture
             </h1>
-            <p className="font-serif text-base leading-relaxed text-slate">
+            <p className="font-serif text-base leading-relaxed text-slate sm:text-lg">
               Référence unifiée des métadonnées NLP — langues, tâches, sources et provenance.
-              Consultation publique, contribution chercheur et administration authentifiée.
+              Parcourez l&apos;index sans créer de compte.
             </p>
 
-            {preview.datasets.length > 0 ? (
-              <dl className="flex flex-wrap gap-x-8 gap-y-3 border-t border-hairline pt-6">
-                <div>
-                  <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Datasets</dt>
-                  <dd className="mt-0.5 font-display text-xl tabular-nums text-ink-black">{preview.datasets.length}</dd>
-                </div>
-                <div>
-                  <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Langues</dt>
-                  <dd className="mt-0.5 font-display text-xl tabular-nums text-ink-black">{preview.languageCount}</dd>
-                </div>
-                <div>
-                  <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Tâches</dt>
-                  <dd className="mt-0.5 font-display text-xl tabular-nums text-ink-black">{preview.taskCodes.length}</dd>
-                </div>
-                <div>
-                  <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Sources</dt>
-                  <dd className="mt-0.5 font-display text-xl tabular-nums text-ink-black">{preview.sourceSlugs.length}</dd>
-                </div>
-              </dl>
-            ) : null}
+            <dl className="flex flex-wrap gap-x-10 gap-y-4 border-t border-hairline pt-6">
+              <div>
+                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Datasets</dt>
+                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
+                  {preview.loadError ? "—" : preview.total}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Langues</dt>
+                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
+                  {preview.loadError ? "—" : preview.languageCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Tâches</dt>
+                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
+                  {preview.loadError ? "—" : preview.taskCodes.length}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">Sources</dt>
+                <dd className="mt-1 font-display text-2xl tabular-nums text-ink-black">
+                  {preview.loadError ? "—" : preview.sourceSlugs.length}
+                </dd>
+              </div>
+            </dl>
           </div>
 
-          <div className="space-y-5 lg:pt-1">
-            <div className="rounded-sm border border-hairline bg-pure-white p-5">
+          <div className="space-y-5 lg:pt-2">
+            <div className="rounded-sm border border-hairline bg-pure-white p-5 shadow-[var(--shadow-card)]">
               <p className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] text-graphite">
                 Rechercher une langue
               </p>
@@ -89,47 +98,51 @@ export default async function Home() {
                 <LanguageSearchForm compact mode="overview" submitLabel="Explorer" />
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {QUICK_LANGUAGES.map((lang) => (
-                <Link
-                  key={lang.href}
-                  href={lang.href}
-                  className="rounded-sm border border-hairline bg-pure-white px-3 py-1.5 font-mono-ui text-[10px] uppercase tracking-[0.08em] text-ink-black transition hover:border-graphite"
-                >
-                  {lang.label}
-                </Link>
-              ))}
+            <div>
+              <p className="mb-2 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">Accès rapide</p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_LANGUAGES.map((lang) => (
+                  <Link
+                    key={lang.href}
+                    href={lang.href}
+                    className="rounded-sm border border-hairline bg-pure-white px-3 py-1.5 font-mono-ui text-[10px] uppercase tracking-[0.08em] text-ink-black transition hover:border-terracotta/50 hover:bg-savanna"
+                  >
+                    {lang.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <IndexPreviewStrip datasets={preview.datasets} />
+      <HomeCatalogSection
+        datasets={preview.datasets}
+        total={preview.total}
+        loadError={preview.loadError}
+      />
 
       <section className={`${pageShell} py-14 lg:py-16`}>
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.12em] text-ink-black">
-              Parcourir
+              Aller plus loin
             </h2>
-            <p className="mt-2 font-serif text-sm text-slate">Accès direct aux vues du catalogue.</p>
+            <p className="mt-2 font-serif text-sm text-slate">Autres vues et intégrations.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/search" className={btnDark}>
-              Rechercher
+            <Link href="/auth/login" className={btnGhost}>
+              Connexion chercheur
             </Link>
-            <Link href="/filter" className={btnGhost}>
-              Filtrer
-            </Link>
-            <Link href="/languages" className={btnGhost}>
-              Langues
+            <Link href="/contribute" className={btnDark}>
+              Contribuer
             </Link>
           </div>
         </div>
 
         <ul className="mt-10 divide-y divide-hairline border-y border-hairline">
           {CAPABILITIES.map((item) => (
-            <li key={item.title} className="grid gap-2 py-5 sm:grid-cols-[140px_1fr_auto] sm:items-baseline sm:gap-8">
+            <li key={item.title} className="grid gap-2 py-5 sm:grid-cols-[120px_1fr_auto] sm:items-baseline sm:gap-8">
               <span className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.08em] text-terracotta">
                 {item.title}
               </span>
