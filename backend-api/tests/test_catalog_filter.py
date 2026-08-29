@@ -130,3 +130,55 @@ def test_stub_filter_contract(stub_catalog) -> None:
     body = response.json()
     assert body["total"] == 1
     assert "filters" in body
+
+
+def test_free_text_query_matches_metadata(catalog_client: TestClient) -> None:
+    """La barre de recherche unifiée interroge le plein texte (FR-11)."""
+    response = catalog_client.get("/catalog/datasets/filter", params={"q": "yoruba"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["filters"]["q"] == "yoruba"
+    assert body["total"] >= 1
+
+
+def test_free_text_query_combines_with_facets(catalog_client: TestClient) -> None:
+    """Plein texte et facettes se cumulent en ET : le résultat est un sous-ensemble."""
+    text_only = catalog_client.get("/catalog/datasets/filter", params={"q": "corpus"}).json()
+    combined = catalog_client.get(
+        "/catalog/datasets/filter",
+        params={"q": "corpus", "data_format": "audio"},
+    ).json()
+
+    assert combined["filters"]["q"] == "corpus"
+    assert combined["filters"]["data_format"] == "audio"
+    assert combined["total"] <= text_only["total"]
+    assert all(dataset["data_format"] == "audio" for dataset in combined["datasets"])
+
+
+def test_free_text_query_without_match_returns_empty(catalog_client: TestClient) -> None:
+    response = catalog_client.get("/catalog/datasets/filter", params={"q": "zzzzzunmatched"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 0
+    assert body["datasets"] == []
+
+
+def test_free_text_query_tolerates_fts_operators(catalog_client: TestClient) -> None:
+    """Une saisie contenant des opérateurs FTS5 ne doit pas produire d'erreur SQL."""
+    for raw in ['yoruba OR "', "asr - NEAR(", "swahili:", "*"]:
+        response = catalog_client.get("/catalog/datasets/filter", params={"q": raw})
+        assert response.status_code == 200, raw
+
+
+def test_free_text_query_alone_satisfies_the_minimum_criterion(catalog_client: TestClient) -> None:
+    """`q` compte comme critère : la recherche seule ne doit pas être rejetée en 400."""
+    assert catalog_client.get("/catalog/datasets/filter", params={"q": "corpus"}).status_code == 200
+    assert catalog_client.get("/catalog/datasets/filter").status_code == 400
+
+
+def test_stub_free_text_contract(stub_catalog) -> None:
+    client = TestClient(app)
+    response = client.get("/catalog/datasets/filter", params={"q": "yoruba"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["filters"]["q"] == "yoruba"

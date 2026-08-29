@@ -82,6 +82,7 @@ export interface DatasetSearchResponse {
 
 /** Filtres appliqués après normalisation côté serveur (Story 2.1). */
 export interface AppliedFilters {
+  q: string | null;
   language: string | null;
   language_code: string | null;
   source: string | null;
@@ -98,6 +99,8 @@ export interface DatasetFilterResponse {
 }
 
 export interface DatasetFilterParams {
+  /** Recherche plein texte sur titre, description et langue. */
+  q?: string;
   language?: string;
   source?: string;
   task?: string;

@@ -43,11 +43,8 @@ export function HomeCatalogSection({ datasets, total, loadError, loading = false
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/search" className={btnGhost}>
-              Par langue
-            </Link>
-            <Link href="/filter" className={btnGhost}>
-              Filtrer
+            <Link href="/catalog" className={btnGhost}>
+              Explorer le catalogue
             </Link>
           </div>
         </div>

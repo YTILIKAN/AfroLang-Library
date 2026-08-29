@@ -6,9 +6,11 @@ import { usePathname } from "next/navigation";
 import { navLinkActiveClass, navLinkIdleClass, panelClass, panelHeaderClass } from "@/components/ui/styles";
 
 const CATALOG_LINKS = [
-  { href: "/search", label: "Recherche", match: (path: string) => path.startsWith("/search") || path.startsWith("/datasets/") },
-  { href: "/filter", label: "Filtres", match: (path: string) => path.startsWith("/filter") },
-  { href: "/languages", label: "Langues", match: (path: string) => path.startsWith("/languages") },
+  {
+    href: "/catalog",
+    label: "Explorer",
+    match: (path: string) => path.startsWith("/catalog") || path.startsWith("/datasets/"),
+  },
 ] as const;
 
 const QUICK_LANGUAGES = [
@@ -40,7 +42,7 @@ export function CatalogNav() {
         ))}
       </ul>
       <div className="border-t border-hairline p-3">
-        <p className="font-mono-ui text-[9px] uppercase tracking-[0.12em] text-slate">Raccourcis</p>
+        <p className="font-mono-ui text-[9px] uppercase tracking-[0.12em] text-slate">Fiches langue</p>
         <ul className="mt-2 space-y-1">
           {QUICK_LANGUAGES.map((lang) => (
             <li key={lang.href}>

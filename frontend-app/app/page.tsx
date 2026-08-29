@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { LanguageSearchForm } from "@/components/catalog/LanguageSearchForm";
+import { CatalogSearchBar } from "@/components/catalog/CatalogSearchBar";
 import {
   HomeCatalogGrid,
   HomeCatalogStats,
@@ -22,19 +22,10 @@ const QUICK_LANGUAGES = [
 
 const CAPABILITIES = [
   {
-    title: "Recherche",
-    description: "Trouver des datasets par langue africaine — code ISO ou nom usuel.",
-    href: "/search",
-  },
-  {
-    title: "Filtres",
-    description: "Combiner langue, source, tâche NLP et format de données.",
-    href: "/filter",
-  },
-  {
-    title: "Langues",
-    description: "Parcourir l'index langue par langue avec statistiques agrégées.",
-    href: "/languages",
+    title: "Catalogue",
+    description:
+      "Chercher en plein texte puis affiner par langue, source, tâche NLP et format.",
+    href: "/catalog",
   },
   {
     title: "API REST v1",
@@ -70,14 +61,14 @@ export default function Home() {
           <div className="space-y-5 lg:pt-2">
             <div className="rounded-sm border border-hairline bg-pure-white p-5 shadow-[var(--shadow-card)]">
               <p className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.12em] text-graphite">
-                Rechercher une langue
+                Rechercher un dataset
               </p>
               <div className="mt-4">
-                <LanguageSearchForm compact mode="overview" submitLabel="Explorer" />
+                <CatalogSearchBar />
               </div>
             </div>
             <div>
-              <p className="mb-2 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">Accès rapide</p>
+              <p className="mb-2 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">Fiches langue</p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_LANGUAGES.map((lang) => (
                   <Link

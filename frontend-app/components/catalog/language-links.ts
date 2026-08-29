@@ -1,10 +1,4 @@
-export type LanguageFormMode = "search" | "overview";
-
-export function buildLanguageHref(mode: LanguageFormMode, language: string): string {
-  const encoded = encodeURIComponent(language);
-  return mode === "overview" ? `/languages/${encoded}` : `/search?language=${encoded}`;
-}
-
+/** Chemin de la fiche langue — seule vue « langue » distincte du catalogue. */
 export function languageOverviewPath(language: string): string {
-  return buildLanguageHref("overview", language);
+  return `/languages/${encodeURIComponent(language)}`;
 }

@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 
 from core.language_codes import resolve_language_code
 from core.models import Dataset, DatasetTaskLink, Language, Source, Task
+from core.search import search_dataset_ids as search_dataset_ids_fulltext
 from core.search import search_datasets as search_datasets_fulltext
 
 
@@ -66,6 +67,7 @@ class CatalogRepository:
         source_slug: str | None = None,
         task_code: str | None = None,
         data_format: str | None = None,
+        dataset_ids: list[int] | None = None,
     ) -> list[Dataset]:
         statement = select(Dataset).options(
             selectinload(Dataset.source),
@@ -74,6 +76,8 @@ class CatalogRepository:
             selectinload(Dataset.tasks),
         )
 
+        if dataset_ids is not None:
+            statement = statement.where(Dataset.id.in_(dataset_ids))
         if language_code is not None:
             statement = statement.where(Dataset.language_code == language_code)
         if source_slug is not None:
@@ -98,3 +102,6 @@ class CatalogRepository:
 
     def search_datasets(self, query: str, *, limit: int = 50) -> list[Dataset]:
         return search_datasets_fulltext(self.session, query, limit=limit)
+
+    def search_dataset_ids(self, query: str, *, limit: int = 200) -> list[int]:
+        return search_dataset_ids_fulltext(self.session, query, limit=limit)

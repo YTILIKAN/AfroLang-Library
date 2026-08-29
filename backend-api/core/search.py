@@ -14,8 +14,19 @@ def _dataset_load_options():
     )
 
 
-def search_datasets(session: Session, query: str, *, limit: int = 50) -> list[Dataset]:
-    """Recherche plein texte — FTS5 (SQLite) ou ILIKE (PostgreSQL et autres)."""
+def _fts_match_expression(query: str) -> str:
+    """Traduit une saisie libre en expression FTS5 sûre.
+
+    Chaque mot devient une phrase entre guillemets suivie de `*` : la citation neutralise
+    les opérateurs FTS5 (`OR`, `NEAR`, `-`, `:`) qu'un visiteur peut taper sans le vouloir,
+    et le préfixe aligne SQLite sur le comportement `ILIKE` du chemin PostgreSQL.
+    """
+    tokens = [token.replace('"', "") for token in query.split()]
+    return " ".join(f'"{token}"*' for token in tokens if token)
+
+
+def search_dataset_ids(session: Session, query: str, *, limit: int = 50) -> list[int]:
+    """Identifiants des datasets correspondant à la requête, par ordre de pertinence."""
     trimmed = query.strip()
     if not trimmed:
         return []
@@ -23,6 +34,10 @@ def search_datasets(session: Session, query: str, *, limit: int = 50) -> list[Da
     dialect = session.bind.dialect.name if session.bind is not None else "sqlite"
 
     if dialect == "sqlite":
+        match_expression = _fts_match_expression(trimmed)
+        if not match_expression:
+            return []
+
         rows = session.execute(
             text(
                 """
@@ -32,25 +47,13 @@ def search_datasets(session: Session, query: str, *, limit: int = 50) -> list[Da
                 LIMIT :limit
                 """
             ),
-            {"query": trimmed, "limit": limit},
+            {"query": match_expression, "limit": limit},
         ).all()
-        dataset_ids = [row[0] for row in rows]
-        if not dataset_ids:
-            return []
-
-        statement = (
-            select(Dataset)
-            .where(Dataset.id.in_(dataset_ids))
-            .options(*_dataset_load_options())
-        )
-        datasets = list(session.exec(statement).all())
-        order = {dataset_id: index for index, dataset_id in enumerate(dataset_ids)}
-        datasets.sort(key=lambda dataset: order.get(dataset.id, 0))
-        return datasets
+        return [row[0] for row in rows]
 
     pattern = f"%{trimmed}%"
     statement = (
-        select(Dataset)
+        select(Dataset.id)
         .where(
             or_(
                 Dataset.title.ilike(pattern),
@@ -59,7 +62,23 @@ def search_datasets(session: Session, query: str, *, limit: int = 50) -> list[Da
                 Dataset.language_raw.ilike(pattern),
             )
         )
-        .options(*_dataset_load_options())
         .limit(limit)
     )
     return list(session.exec(statement).all())
+
+
+def search_datasets(session: Session, query: str, *, limit: int = 50) -> list[Dataset]:
+    """Recherche plein texte — FTS5 (SQLite) ou ILIKE (PostgreSQL et autres)."""
+    dataset_ids = search_dataset_ids(session, query, limit=limit)
+    if not dataset_ids:
+        return []
+
+    statement = (
+        select(Dataset)
+        .where(Dataset.id.in_(dataset_ids))
+        .options(*_dataset_load_options())
+    )
+    datasets = list(session.exec(statement).all())
+    order = {dataset_id: index for index, dataset_id in enumerate(dataset_ids)}
+    datasets.sort(key=lambda dataset: order.get(dataset.id, 0))
+    return datasets

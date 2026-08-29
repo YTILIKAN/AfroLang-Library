@@ -105,12 +105,13 @@ const endpoints = [
     id: "filter",
     method: "GET",
     path: "/api/v1/datasets/filter",
-    title: "Filtrer les datasets",
-    description: "Combine les filtres fournis avec une logique ET.",
+    title: "Explorer les datasets",
+    description:
+      "Recherche plein texte (q) et facettes, combinées avec une logique ET.",
     query:
-      "Au moins un paramètre requis : language, source, task ou data_format.",
+      "Au moins un paramètre requis : q, language, source, task ou data_format.",
     response: "DatasetFilterResponse",
-    example: `curl "${API_BASE_URL}/datasets/filter?language=swh&task=asr"`,
+    example: `curl "${API_BASE_URL}/datasets/filter?q=corpus&language=swh&task=asr"`,
     body: filterResponse,
   },
   {

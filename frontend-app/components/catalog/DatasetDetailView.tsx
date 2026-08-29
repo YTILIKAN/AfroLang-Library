@@ -29,7 +29,7 @@ export function DatasetDetailView({ dataset }: DatasetDetailViewProps) {
     <div className="space-y-8">
       <header className="space-y-4 border-b border-hairline pb-6">
         <Link
-          href="/search"
+          href="/catalog"
           className="font-mono-ui text-[10px] uppercase tracking-wide text-slate hover:text-ink-black"
         >
           ← Catalogue

@@ -17,7 +17,7 @@ export default function DatasetNotFound() {
         <p className="mt-3 font-serif text-sm leading-relaxed text-slate">
           Cette fiche n&apos;existe pas dans l&apos;index ou a été retirée.
         </p>
-        <Link href="/search" className={`mt-8 inline-flex ${btnGhost}`}>
+        <Link href="/catalog" className={`mt-8 inline-flex ${btnGhost}`}>
           Nouvelle recherche
         </Link>
       </main>

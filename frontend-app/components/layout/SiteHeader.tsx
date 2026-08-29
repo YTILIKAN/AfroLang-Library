@@ -9,9 +9,7 @@ import { btnGhost, btnOrange } from "@/components/ui/styles";
 
 const NAV = [
   { href: "/", label: "Accueil" },
-  { href: "/search", label: "Recherche" },
-  { href: "/filter", label: "Filtres" },
-  { href: "/languages", label: "Langues" },
+  { href: "/catalog", label: "Catalogue" },
   { href: "/contribute", label: "Contribuer", auth: true },
   { href: "/api-docs", label: "API" },
 ];

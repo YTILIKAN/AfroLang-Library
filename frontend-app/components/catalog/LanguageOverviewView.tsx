@@ -31,14 +31,9 @@ export function LanguageOverviewView({ overview }: LanguageOverviewViewProps) {
         }
         actions={
           isKnown && language ? (
-            <>
-              <Link href={`/search?language=${encodeURIComponent(language.code)}`} className={tagClass}>
-                Recherche
-              </Link>
-              <Link href={`/filter?language=${encodeURIComponent(language.name)}`} className={tagClass}>
-                Filtrer
-              </Link>
-            </>
+            <Link href={`/catalog?language=${encodeURIComponent(language.code)}`} className={tagClass}>
+              Voir dans le catalogue
+            </Link>
           ) : undefined
         }
       />
