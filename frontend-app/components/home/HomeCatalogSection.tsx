@@ -1,14 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 
 import { DatasetCard } from "@/components/catalog/DatasetCard";
-import { btnDark, btnGhost, pageShell } from "@/components/ui/styles";
+import { btnDark, pageShell } from "@/components/ui/styles";
 import { DatasetSummary } from "@/lib/types";
 
-/** Nombre de fiches révélées par palier dans une section du catalogue. */
-export const CATALOG_PAGE_SIZE = 10;
+/** Fiches montrées en aperçu sur l'accueil — l'index complet vit sur `/catalog`. */
+export const HOME_PREVIEW_SIZE = 6;
 
 interface HomeCatalogSectionProps {
   datasets: DatasetSummary[];
@@ -17,36 +14,30 @@ interface HomeCatalogSectionProps {
   loading?: boolean;
 }
 
+/**
+ * Aperçu du catalogue sur l'accueil : six fiches, puis un renvoi vers `/catalog`.
+ *
+ * L'accueil ne déroule plus l'index par paliers — c'était un doublon de l'explorateur, seul
+ * écran à porter la recherche plein texte et les quatre facettes.
+ */
 export function HomeCatalogSection({ datasets, total, loadError, loading = false }: HomeCatalogSectionProps) {
-  const [visibleCount, setVisibleCount] = useState(CATALOG_PAGE_SIZE);
-
-  const collapsible = datasets.length > CATALOG_PAGE_SIZE;
-  const shownCount = collapsible ? Math.min(visibleCount, datasets.length) : datasets.length;
-  const remaining = datasets.length - shownCount;
-  const expanded = remaining === 0;
-  const nextStep = Math.min(CATALOG_PAGE_SIZE, remaining);
+  const preview = datasets.slice(0, HOME_PREVIEW_SIZE);
+  const remaining = Math.max(total - preview.length, 0);
 
   return (
     <section className="border-t border-hairline bg-savanna/30" aria-labelledby="catalog-heading">
       <div className="kente-band kente-band-md" aria-hidden />
       <div className={`${pageShell} py-12 lg:py-16`}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl space-y-2">
-            <p className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.14em] text-terracotta">
-              Catalogue public
-            </p>
-            <h2 id="catalog-heading" className="font-display text-2xl font-medium tracking-[-0.01em] text-ink-black">
-              {total > 0 ? `${total} dataset${total > 1 ? "s" : ""} référencé${total > 1 ? "s" : ""}` : "Index des datasets"}
-            </h2>
-            <p className="font-serif text-sm leading-relaxed text-slate">
-              Consultation libre — métadonnées, langues, tâches NLP et liens vers les sources d&apos;origine.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/catalog" className={btnGhost}>
-              Explorer le catalogue
-            </Link>
-          </div>
+        <div className="max-w-2xl space-y-2">
+          <p className="font-mono-ui text-[10px] font-medium uppercase tracking-[0.14em] text-terracotta">
+            Catalogue public
+          </p>
+          <h2 id="catalog-heading" className="font-display text-2xl font-medium tracking-[-0.01em] text-ink-black">
+            {total > 0 ? `${total} dataset${total > 1 ? "s" : ""} référencé${total > 1 ? "s" : ""}` : "Index des datasets"}
+          </h2>
+          <p className="font-serif text-sm leading-relaxed text-slate">
+            Consultation libre — métadonnées, langues, tâches NLP et liens vers les sources d&apos;origine.
+          </p>
         </div>
 
         {loadError ? (
@@ -63,7 +54,7 @@ export function HomeCatalogSection({ datasets, total, loadError, loading = false
             <p className="font-display text-lg text-ink-black">Chargement du catalogue…</p>
             <p className="mt-2 font-serif text-sm text-slate">Récupération des datasets depuis l&apos;index public.</p>
           </div>
-        ) : datasets.length === 0 ? (
+        ) : preview.length === 0 ? (
           <div className="mt-10 rounded-sm border border-hairline bg-pure-white p-8 text-center">
             <p className="font-display text-lg text-ink-black">Aucun dataset pour le moment</p>
             <p className="mt-2 font-serif text-sm text-slate">
@@ -72,47 +63,24 @@ export function HomeCatalogSection({ datasets, total, loadError, loading = false
           </div>
         ) : (
           <>
-            {collapsible ? (
-              <div className="mt-10 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-hairline bg-pure-white px-4 py-3 shadow-[var(--shadow-subtle)]">
-                <p className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">
-                  <span className="tabular-nums text-ink-black">{shownCount}</span> sur{" "}
-                  <span className="tabular-nums text-ink-black">{datasets.length}</span> datasets affichés
-                </p>
-                <button
-                  type="button"
-                  aria-pressed={expanded}
-                  aria-controls="catalog-list"
-                  onClick={() => setVisibleCount(expanded ? CATALOG_PAGE_SIZE : datasets.length)}
-                  className={btnGhost}
-                >
-                  {expanded ? "Réduire la liste" : "Tout afficher"}
-                </button>
-              </div>
-            ) : null}
-
-            <ul id="catalog-list" className={`grid gap-8 lg:grid-cols-2 ${collapsible ? "mt-8" : "mt-10"}`}>
-              {datasets.slice(0, shownCount).map((dataset) => (
+            <ul id="catalog-list" className="mt-10 grid gap-8 lg:grid-cols-2">
+              {preview.map((dataset) => (
                 <li key={dataset.id}>
                   <DatasetCard dataset={dataset} />
                 </li>
               ))}
             </ul>
 
-            {remaining > 0 ? (
-              <div className="mt-10 flex flex-col items-center gap-2">
-                <button
-                  type="button"
-                  aria-controls="catalog-list"
-                  onClick={() => setVisibleCount((current) => current + CATALOG_PAGE_SIZE)}
-                  className={btnDark}
-                >
-                  Lire plus ({nextStep})
-                </button>
-                <p className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
-                  Encore {remaining} dataset{remaining > 1 ? "s" : ""} à parcourir
-                </p>
-              </div>
-            ) : null}
+            <div className="mt-10 flex flex-col items-center gap-2">
+              <Link href="/catalog" className={btnDark}>
+                {remaining > 0 ? `Lire plus (${remaining})` : "Explorer le catalogue"}
+              </Link>
+              <p className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
+                {remaining > 0
+                  ? `Encore ${remaining} dataset${remaining > 1 ? "s" : ""} dans le catalogue complet`
+                  : "Recherche plein texte et facettes sur la page catalogue"}
+              </p>
+            </div>
           </>
         )}
       </div>

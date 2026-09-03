@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { CATALOG_PAGE_SIZE, HomeCatalogSection } from "./HomeCatalogSection";
+import { HOME_PREVIEW_SIZE, HomeCatalogSection } from "./HomeCatalogSection";
 import { buildDataset } from "@/test/fixtures";
 
 function buildDatasets(count: number) {
@@ -10,63 +9,41 @@ function buildDatasets(count: number) {
   );
 }
 
-function renderSection(count: number) {
-  const datasets = buildDatasets(count);
-  render(<HomeCatalogSection datasets={datasets} total={count} loadError={false} />);
+function renderSection(loaded: number, total = loaded) {
+  const datasets = buildDatasets(loaded);
+  render(<HomeCatalogSection datasets={datasets} total={total} loadError={false} />);
   return datasets;
 }
 
 describe("HomeCatalogSection", () => {
-  it("n'affiche qu'un palier de 10 datasets à l'ouverture", () => {
+  it("n'affiche qu'un aperçu de six fiches, quelle que soit la taille de l'index", () => {
     renderSection(24);
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(CATALOG_PAGE_SIZE);
-    expect(screen.getByText("Dataset 10")).toBeInTheDocument();
-    expect(screen.queryByText("Dataset 11")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(HOME_PREVIEW_SIZE);
+    expect(screen.getByText("Dataset 6")).toBeInTheDocument();
+    expect(screen.queryByText("Dataset 7")).not.toBeInTheDocument();
   });
 
-  it("indique le nombre de fiches affichées sur le total chargé", () => {
+  it("renvoie « Lire plus » vers le catalogue avec le reste à parcourir", () => {
     renderSection(24);
 
-    expect(screen.getByText("10")).toBeInTheDocument();
-    expect(screen.getByText("24")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Lire plus (18)" });
+    expect(link).toHaveAttribute("href", "/catalog");
+    expect(screen.getByText("Encore 18 datasets dans le catalogue complet")).toBeInTheDocument();
   });
 
-  it("révèle le palier suivant à chaque « Lire plus » jusqu'à tout afficher", async () => {
-    const user = userEvent.setup();
-    renderSection(24);
+  it("compte le reste sur le total de l'index, pas sur les fiches chargées", () => {
+    renderSection(HOME_PREVIEW_SIZE, 42);
 
-    await user.click(screen.getByRole("button", { name: "Lire plus (10)" }));
-    expect(screen.getAllByRole("listitem")).toHaveLength(20);
-
-    await user.click(screen.getByRole("button", { name: "Lire plus (4)" }));
-    expect(screen.getAllByRole("listitem")).toHaveLength(24);
-    expect(screen.queryByRole("button", { name: /Lire plus/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Lire plus (36)" })).toBeInTheDocument();
   });
 
-  it("bascule entre l'index complet et le palier réduit depuis la barre", async () => {
-    const user = userEvent.setup();
-    renderSection(24);
+  it("propose d'explorer le catalogue quand l'aperçu couvre tout l'index", () => {
+    renderSection(HOME_PREVIEW_SIZE);
 
-    const toggle = screen.getByRole("button", { name: "Tout afficher" });
-    expect(toggle).toHaveAttribute("aria-pressed", "false");
-
-    await user.click(toggle);
-    expect(screen.getAllByRole("listitem")).toHaveLength(24);
-
-    const collapse = screen.getByRole("button", { name: "Réduire la liste" });
-    expect(collapse).toHaveAttribute("aria-pressed", "true");
-
-    await user.click(collapse);
-    expect(screen.getAllByRole("listitem")).toHaveLength(CATALOG_PAGE_SIZE);
-  });
-
-  it("n'affiche ni barre ni « Lire plus » quand la section tient en un palier", () => {
-    renderSection(CATALOG_PAGE_SIZE);
-
-    expect(screen.getAllByRole("listitem")).toHaveLength(CATALOG_PAGE_SIZE);
-    expect(screen.queryByRole("button", { name: "Tout afficher" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Lire plus/ })).not.toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Explorer le catalogue" });
+    expect(link).toHaveAttribute("href", "/catalog");
+    expect(screen.queryByRole("link", { name: /Lire plus/ })).not.toBeInTheDocument();
   });
 
   it("laisse les états de chargement et d'erreur intacts", () => {

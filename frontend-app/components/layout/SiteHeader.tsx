@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useAuth } from "@/components/auth/AuthProvider";
+import { CatalogSearchBar } from "@/components/catalog/CatalogSearchBar";
 import { AfriLandLogo } from "@/components/layout/AfriLandLogo";
 import { btnGhost, btnOrange } from "@/components/ui/styles";
 
@@ -23,6 +24,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   const { account, loading, logout } = useAuth();
   const isAdminRoute = pathname.startsWith("/admin");
+  // Accueil et /catalog portent déjà leur propre champ : le header en fournit un partout ailleurs.
+  const showSearch = pathname !== "/" && !pathname.startsWith("/catalog");
 
   return (
     <header className="sticky top-0 z-50 border-b border-hairline bg-cream-paper/95 backdrop-blur-sm">
@@ -74,6 +77,12 @@ export function SiteHeader() {
               })
             : null}
         </nav>
+
+        {showSearch ? (
+          <div className="hidden min-w-0 justify-end md:flex">
+            <CatalogSearchBar variant="compact" placeholder="Rechercher un dataset…" />
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-2">
           {loading ? (

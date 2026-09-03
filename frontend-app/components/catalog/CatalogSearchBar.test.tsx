@@ -32,4 +32,14 @@ describe("CatalogSearchBar", () => {
 
     expect(push).toHaveBeenCalledWith("/catalog");
   });
+
+  it("redirige aussi vers le catalogue depuis la variante compacte du header", async () => {
+    const user = userEvent.setup();
+    render(<CatalogSearchBar variant="compact" />);
+
+    await user.type(screen.getByLabelText("Rechercher"), "ASR");
+    await user.click(screen.getByRole("button", { name: /Explorer/i }));
+
+    expect(push).toHaveBeenCalledWith("/catalog?q=ASR");
+  });
 });
