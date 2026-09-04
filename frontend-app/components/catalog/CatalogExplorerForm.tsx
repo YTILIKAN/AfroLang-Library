@@ -3,7 +3,14 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { btnDark, btnGhost, inputClass, labelMono, selectClass } from "@/components/ui/styles";
+import {
+  btnDark,
+  btnGhost,
+  inputClass,
+  labelMono,
+  selectClass,
+  tagClass,
+} from "@/components/ui/styles";
 import { DatasetFilterParams } from "@/lib/types";
 
 /**
@@ -55,6 +62,18 @@ export function CatalogExplorerForm({ defaults = {} }: CatalogExplorerFormProps)
   const [task, setTask] = useState(defaults.task ?? "");
   const [dataFormat, setDataFormat] = useState(defaults.data_format ?? "");
 
+  // Les facettes sont repliées par défaut : la recherche plein texte couvre la consultation
+  // courante, et le panneau déployé repoussait les résultats sous la ligne de flottaison. Elles
+  // s'ouvrent d'emblée quand l'URL en porte déjà une, pour que le critère qui restreint la liste
+  // reste visible et modifiable.
+  const [facetsOpen, setFacetsOpen] = useState(
+    Boolean(defaults.language || defaults.source || defaults.task || defaults.data_format),
+  );
+
+  const activeFacetCount = [language, source, task, dataFormat].filter(
+    (value) => value.trim() !== "",
+  ).length;
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
@@ -97,76 +116,92 @@ export function CatalogExplorerForm({ defaults = {} }: CatalogExplorerFormProps)
         </div>
       </label>
 
-      <div className="space-y-4 border-t border-hairline pt-5">
-        <p className="font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate">
-          Affiner — les critères se cumulent
-        </p>
+      <div className="border-t border-hairline pt-5">
+        <button
+          type="button"
+          onClick={() => setFacetsOpen((open) => !open)}
+          aria-expanded={facetsOpen}
+          aria-controls="catalog-facets"
+          className="flex items-center gap-2 font-mono-ui text-[10px] uppercase tracking-[0.12em] text-slate transition hover:text-ink-black"
+        >
+          <span aria-hidden="true" className="text-[11px] leading-none">
+            {facetsOpen ? "−" : "+"}
+          </span>
+          Filtres
+          {activeFacetCount > 0 ? (
+            <span className={tagClass}>
+              {activeFacetCount} actif{activeFacetCount > 1 ? "s" : ""}
+            </span>
+          ) : null}
+        </button>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-2 sm:col-span-2">
-            <span className={labelMono}>Langue</span>
-            <input
-              type="search"
-              value={language}
-              onChange={(event) => setLanguage(event.target.value)}
-              placeholder="Swahili, yor, Wolof — code ISO 639-3 ou alias"
-              className={inputClass}
-            />
-          </label>
+        <div id="catalog-facets" hidden={!facetsOpen} className="space-y-4 pt-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-2 sm:col-span-2">
+              <span className={labelMono}>Langue</span>
+              <input
+                type="search"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value)}
+                placeholder="Swahili, yor, Wolof — code ISO 639-3 ou alias"
+                className={inputClass}
+              />
+            </label>
 
-          <label className="space-y-2">
-            <span className={labelMono}>Source</span>
-            <select
-              value={source}
-              onChange={(event) => setSource(event.target.value)}
-              className={`${inputClass} ${selectClass}`}
-            >
-              {SOURCE_OPTIONS.map((option) => (
-                <option key={option.value || "any"} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="space-y-2">
+              <span className={labelMono}>Source</span>
+              <select
+                value={source}
+                onChange={(event) => setSource(event.target.value)}
+                className={`${inputClass} ${selectClass}`}
+              >
+                {SOURCE_OPTIONS.map((option) => (
+                  <option key={option.value || "any"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="space-y-2">
-            <span className={labelMono}>Tâche NLP</span>
-            <select
-              value={task}
-              onChange={(event) => setTask(event.target.value)}
-              className={`${inputClass} ${selectClass}`}
-            >
-              {TASK_OPTIONS.map((option) => (
-                <option key={option.value || "any"} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="space-y-2">
+              <span className={labelMono}>Tâche NLP</span>
+              <select
+                value={task}
+                onChange={(event) => setTask(event.target.value)}
+                className={`${inputClass} ${selectClass}`}
+              >
+                {TASK_OPTIONS.map((option) => (
+                  <option key={option.value || "any"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="space-y-2 sm:col-span-2">
-            <span className={labelMono}>Format de données</span>
-            <select
-              value={dataFormat}
-              onChange={(event) => setDataFormat(event.target.value)}
-              className={`${inputClass} ${selectClass}`}
-            >
-              {FORMAT_OPTIONS.map((option) => (
-                <option key={option.value || "any"} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+            <label className="space-y-2 sm:col-span-2">
+              <span className={labelMono}>Format de données</span>
+              <select
+                value={dataFormat}
+                onChange={(event) => setDataFormat(event.target.value)}
+                className={`${inputClass} ${selectClass}`}
+              >
+                {FORMAT_OPTIONS.map((option) => (
+                  <option key={option.value || "any"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button type="submit" className={btnDark}>
-            Appliquer
-          </button>
-          <button type="button" onClick={handleReset} className={btnGhost}>
-            Réinitialiser
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button type="submit" className={btnDark}>
+              Appliquer
+            </button>
+            <button type="button" onClick={handleReset} className={btnGhost}>
+              Réinitialiser
+            </button>
+          </div>
         </div>
       </div>
     </form>

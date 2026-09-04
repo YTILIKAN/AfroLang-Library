@@ -13,6 +13,11 @@ beforeEach(() => {
   push.mockClear();
 });
 
+/** Les facettes sont repliées tant qu'aucun critère n'est appliqué : il faut les déployer. */
+async function openFacets(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: /Affiner/i }));
+}
+
 describe("CatalogExplorerForm", () => {
   it("pré-remplit les champs avec les critères déjà appliqués", () => {
     render(<CatalogExplorerForm defaults={{ q: "corpus", language: "swahili", task: "asr" }} />);
@@ -26,6 +31,7 @@ describe("CatalogExplorerForm", () => {
     const user = userEvent.setup();
     render(<CatalogExplorerForm />);
 
+    await openFacets(user);
     await user.type(screen.getByLabelText("Langue"), "swahili");
     await user.selectOptions(screen.getByLabelText("Source"), "kaggle");
     await user.click(screen.getByRole("button", { name: /Appliquer/i }));
@@ -38,6 +44,7 @@ describe("CatalogExplorerForm", () => {
     render(<CatalogExplorerForm />);
 
     await user.type(screen.getByLabelText("Rechercher"), "corpus");
+    await openFacets(user);
     await user.type(screen.getByLabelText("Langue"), "swahili");
     await user.selectOptions(screen.getByLabelText("Source"), "huggingface");
     await user.selectOptions(screen.getByLabelText("Tâche NLP"), "asr");
@@ -56,6 +63,7 @@ describe("CatalogExplorerForm", () => {
     // `contribution` (source dotée d'une API) et `manual` (source sans API, FR-5) sont les
     // slugs posés par contributor_service : sans eux, un dataset soumis par un chercheur
     // n'est pas filtrable par source.
+    await openFacets(user);
     await user.selectOptions(screen.getByLabelText("Source"), "contribution");
     await user.click(screen.getByRole("button", { name: /Appliquer/i }));
 
@@ -67,6 +75,7 @@ describe("CatalogExplorerForm", () => {
     const user = userEvent.setup();
     render(<CatalogExplorerForm />);
 
+    await openFacets(user);
     await user.click(screen.getByRole("button", { name: /Appliquer/i }));
 
     expect(push).toHaveBeenCalledWith("/catalog");
@@ -91,9 +100,52 @@ describe("CatalogExplorerForm", () => {
     render(<CatalogExplorerForm />);
 
     await user.type(screen.getByLabelText("Rechercher"), "traduction");
+    await openFacets(user);
     await user.selectOptions(screen.getByLabelText("Format de données"), "text");
     await user.click(screen.getByRole("button", { name: /^Rechercher$/i }));
 
     expect(push).toHaveBeenCalledWith("/catalog?q=traduction&data_format=text");
+  });
+
+  it("replie les facettes par défaut et les déploie au clic", async () => {
+    const user = userEvent.setup();
+    render(<CatalogExplorerForm />);
+
+    const toggle = screen.getByRole("button", { name: /Affiner/i });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: /Appliquer/i })).not.toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /Appliquer/i })).toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("déploie les facettes d'emblée quand un critère de facette est déjà appliqué", () => {
+    render(<CatalogExplorerForm defaults={{ language: "swahili" }} />);
+
+    expect(screen.getByRole("button", { name: /Affiner/i })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("laisse les facettes repliées quand seule la recherche plein texte est appliquée", () => {
+    render(<CatalogExplorerForm defaults={{ q: "corpus" }} />);
+
+    expect(screen.getByRole("button", { name: /Affiner/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("indique le nombre de facettes actives sur le bouton replié", () => {
+    render(<CatalogExplorerForm defaults={{ q: "corpus", language: "swahili", task: "asr" }} />);
+
+    expect(screen.getByRole("button", { name: /Affiner.*2 actifs/i })).toBeInTheDocument();
   });
 });

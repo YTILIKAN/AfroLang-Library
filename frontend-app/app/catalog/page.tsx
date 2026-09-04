@@ -51,8 +51,6 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
   try {
     if (hasCriteria) {
-      // Un seul appel couvre les trois anciens écrans : `q` porte la recherche plein texte,
-      // les quatre autres champs les facettes, et le tout se cumule en ET côté API.
       const result = await filterDatasets(params);
       datasets = result.datasets;
       total = result.total;
@@ -109,7 +107,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
               <EmptyState
                 message={
                   hasCriteria
-                    ? "Aucun dataset ne satisfait tous les critères. Retirez-en un pour élargir."
+                    ? "Aucun dataset ne satisfait tous les critères."
                     : "L'index ne contient encore aucun dataset."
                 }
               />
