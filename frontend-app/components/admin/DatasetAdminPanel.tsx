@@ -300,7 +300,7 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
       <WorkflowHeader
         eyebrow="Administration"
         title="Datasets de l'index"
-        description="CRUD global sur toutes les entrées du catalogue."
+        description="Vue global sur toutes les entrées du catalogue."
       />
 
       {error ? <ErrorBanner message={error} /> : null}
