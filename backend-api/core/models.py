@@ -31,6 +31,16 @@ class Account(SQLModel, table=True):
     display_name: str = Field(max_length=120)
     password_hash: str
     role: AccountRole = Field(default=AccountRole.CHERCHEUR, index=True)
+    is_super_admin: bool = Field(
+        default=False,
+        index=True,
+        description=(
+            "Compte super admin — un seul par instance. Jamais modifiable via l'API : "
+            "aucun schéma de requête ne l'expose, seuls le seed et `scripts.set_super_admin` "
+            "le positionnent. L'ancre est la ligne, pas l'e-mail : le super admin peut "
+            "changer ses informations sans perdre sa protection."
+        ),
+    )
     is_active: bool = Field(default=True, index=True)
     created_at: datetime = Field(
         default_factory=utc_now,

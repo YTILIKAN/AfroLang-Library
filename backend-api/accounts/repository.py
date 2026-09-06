@@ -19,6 +19,11 @@ class AccountsRepository:
     def get_account_by_id(self, account_id: int) -> Account | None:
         return self.session.get(Account, account_id)
 
+    def get_super_admin(self) -> Account | None:
+        """Le super admin est identifié par son drapeau, jamais par son e-mail."""
+        statement = select(Account).where(Account.is_super_admin == True)  # noqa: E712
+        return self.session.exec(statement).first()
+
     def create_account(
         self,
         *,
@@ -26,12 +31,14 @@ class AccountsRepository:
         display_name: str,
         password_hash: str,
         role: AccountRole = AccountRole.CHERCHEUR,
+        is_super_admin: bool = False,
     ) -> Account:
         account = Account(
             email=email.strip().lower(),
             display_name=display_name.strip(),
             password_hash=password_hash,
             role=role,
+            is_super_admin=is_super_admin,
         )
         self.session.add(account)
         self.session.commit()
@@ -70,6 +77,8 @@ class AccountsRepository:
         role: AccountRole | None = None,
         is_active: bool | None = None,
     ) -> Account | None:
+        """Mise à jour depuis l'API. `is_super_admin` n'est pas un paramètre : le drapeau
+        n'est atteignable que par `promote_super_admin`, hors chemin HTTP."""
         if display_name is not None:
             account.display_name = display_name.strip()
         if role is not None:
@@ -87,6 +96,31 @@ class AccountsRepository:
         for row in self.session.exec(statement).all():
             self.session.delete(row)
         self.session.commit()
+
+    def promote_super_admin(self, account: Account) -> Account:
+        """Transfère le statut de super admin — réservé aux scripts d'administration.
+
+        Aucune route n'appelle cette méthode : un endpoint de transfert rouvrirait la
+        surface d'attaque que le drapeau ferme. L'unicité est garantie ici en retirant
+        le drapeau au détenteur précédent dans la même transaction.
+        """
+        for previous in self.session.exec(
+            select(Account).where(Account.is_super_admin == True)  # noqa: E712
+        ).all():
+            if previous.id == account.id:
+                continue
+            previous.is_super_admin = False
+            previous.updated_at = utc_now()
+            self.session.add(previous)
+
+        account.is_super_admin = True
+        account.role = AccountRole.ADMIN
+        account.is_active = True
+        account.updated_at = utc_now()
+        self.session.add(account)
+        self.session.commit()
+        self.session.refresh(account)
+        return account
 
     def list_accounts(self) -> list[Account]:
         statement = select(Account).order_by(Account.created_at)

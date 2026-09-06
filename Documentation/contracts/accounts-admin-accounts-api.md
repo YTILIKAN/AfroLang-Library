@@ -35,6 +35,27 @@ Un compte **désactivé** (`is_active: false`) :
 
 ---
 
+## Compte super admin
+
+Un compte porte le drapeau `is_super_admin` (présent en lecture dans toutes les réponses, jamais
+accepté en écriture). Il n'existe **au plus qu'un** super admin par instance.
+
+| Action | Auteur | Réponse |
+| --- | --- | --- |
+| `is_active: false` sur le super admin | un autre admin | **403** |
+| `role` différent sur le super admin | un autre admin | **403** |
+| `role` différent de `admin` sur soi | le super admin | **403** |
+| `is_active: false` sur soi | le super admin | **400** |
+| `display_name` sur soi | le super admin | **200** |
+
+Le champ `is_super_admin` n'est présent dans aucun schéma de requête : l'envoyer dans un POST ou un
+PATCH n'a aucun effet, le compte créé ou modifié garde `is_super_admin: false`. Le transfert se
+fait hors API, par `python -m scripts.set_super_admin <email>`.
+
+Détails et justification : [compte-super-admin.md](../backend/compte-super-admin.md)
+
+---
+
 ## Création (POST)
 
 ```json
@@ -63,6 +84,8 @@ Champs optionnels : `display_name`, `role`, `is_active`.
 
 Un admin ne peut pas désactiver **son propre** compte (**400**).
 
+Le compte super admin ne peut être ni désactivé ni rétrogradé par un autre admin (**403**).
+
 ---
 
 ## Exemples
@@ -90,5 +113,6 @@ Avec `ACCOUNTS_STUB=true`, CRUD en mémoire sur les comptes factices + comptes c
 | 400 | Auto-désactivation interdite |
 | 401 | Jeton absent ou invalide |
 | 403 | Rôle non Admin, ou compte désactivé à la connexion |
+| 403 | Désactivation ou changement de rôle du compte super admin |
 | 404 | Compte introuvable |
 | 409 | E-mail déjà utilisé |

@@ -8,6 +8,8 @@ export interface Account {
   display_name: string;
   role: AccountRole;
   is_active: boolean;
+  /** Compte super admin : ni désactivable ni rétrogradable par un autre admin. */
+  is_super_admin?: boolean;
   created_at: string;
 }
 

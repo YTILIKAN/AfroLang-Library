@@ -153,6 +153,29 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     expect(updateAdminAccount).not.toHaveBeenCalled();
   });
 
+  it("verrouille les commandes du compte super admin", async () => {
+    listAdminAccounts.mockResolvedValue({
+      total: 2,
+      accounts: [
+        buildCurrentAdmin(),
+        buildAccount({
+          id: 2,
+          display_name: "Awa Ndiaye",
+          role: "admin",
+          is_super_admin: true,
+        }),
+      ],
+    });
+    renderPanel();
+
+    expect(await screen.findByText("super admin")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Désactiver Awa Ndiaye" })).toBeDisabled();
+    expect(screen.getByLabelText("Rôle de Awa Ndiaye")).toBeDisabled();
+    // L'admin connecté garde ses propres commandes de rôle.
+    expect(screen.getByLabelText("Rôle de Kofi Mensah")).toBeEnabled();
+    expect(updateAdminAccount).not.toHaveBeenCalled();
+  });
+
   it("remonte le refus du serveur pour un compte non-admin (AD-14)", async () => {
     listAdminAccounts.mockRejectedValue(new ApiError("Réservé au rôle Admin", 403));
     renderPanel();

@@ -55,6 +55,29 @@ class AdminAccountService:
                 detail="Un admin ne peut pas désactiver son propre compte",
             )
 
+        if account.is_super_admin and account.id != acting_admin.id:
+            # Le super admin ne peut être ni désactivé ni rétrogradé par un autre compte.
+            # Il reste libre de modifier ses propres informations : la protection tient au
+            # drapeau porté par la ligne, pas à son e-mail.
+            if payload.is_active is False:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Le compte super admin ne peut pas être désactivé",
+                )
+            if payload.role is not None and payload.role != account.role:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Le rôle du compte super admin ne peut pas être modifié",
+                )
+
+        if account.is_super_admin and payload.role is not None and payload.role != AccountRole.ADMIN:
+            # Vaut aussi pour le super admin agissant sur lui-même : se rétrograder
+            # laisserait l'instance sans administrateur protégé.
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Le compte super admin doit conserver le rôle admin",
+            )
+
         updated = self.repository.update_account(
             account,
             display_name=payload.display_name,
