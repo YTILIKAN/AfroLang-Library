@@ -36,7 +36,7 @@ describe("MyDatasetsPanel (Story 3.6)", () => {
 
     expect(await screen.findByText("Corpus Twi")).toBeInTheDocument();
     expect(screen.getByText("Archive Ewe")).toBeInTheDocument();
-    expect(screen.getByText("2 contributions — API /accounts/datasets/mine")).toBeInTheDocument();
+    expect(screen.getByText("2 contributions")).toBeInTheDocument();
   });
 
   it("propose de soumettre quand le chercheur n'a encore rien contribué", async () => {

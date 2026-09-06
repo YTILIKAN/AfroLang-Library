@@ -15,7 +15,7 @@ beforeEach(() => {
 
 /** Les facettes sont repliées tant qu'aucun critère n'est appliqué : il faut les déployer. */
 async function openFacets(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: /Affiner/i }));
+  await user.click(screen.getByRole("button", { name: /Filtres/i }));
 }
 
 describe("CatalogExplorerForm", () => {
@@ -111,7 +111,7 @@ describe("CatalogExplorerForm", () => {
     const user = userEvent.setup();
     render(<CatalogExplorerForm />);
 
-    const toggle = screen.getByRole("button", { name: /Affiner/i });
+    const toggle = screen.getByRole("button", { name: /Filtres/i });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("button", { name: /Appliquer/i })).not.toBeInTheDocument();
 
@@ -128,7 +128,7 @@ describe("CatalogExplorerForm", () => {
   it("déploie les facettes d'emblée quand un critère de facette est déjà appliqué", () => {
     render(<CatalogExplorerForm defaults={{ language: "swahili" }} />);
 
-    expect(screen.getByRole("button", { name: /Affiner/i })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /Filtres/i })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
@@ -137,7 +137,7 @@ describe("CatalogExplorerForm", () => {
   it("laisse les facettes repliées quand seule la recherche plein texte est appliquée", () => {
     render(<CatalogExplorerForm defaults={{ q: "corpus" }} />);
 
-    expect(screen.getByRole("button", { name: /Affiner/i })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /Filtres/i })).toHaveAttribute(
       "aria-expanded",
       "false",
     );
@@ -146,6 +146,6 @@ describe("CatalogExplorerForm", () => {
   it("indique le nombre de facettes actives sur le bouton replié", () => {
     render(<CatalogExplorerForm defaults={{ q: "corpus", language: "swahili", task: "asr" }} />);
 
-    expect(screen.getByRole("button", { name: /Affiner.*2 actifs/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Filtres.*2 actifs/i })).toBeInTheDocument();
   });
 });

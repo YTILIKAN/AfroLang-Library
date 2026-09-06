@@ -107,8 +107,13 @@ def test_filter_by_normalized_source_and_format(catalog_client: TestClient) -> N
     body = response.json()
     assert body["filters"]["source"] == "huggingface"
     assert body["filters"]["data_format"] == "audio"
-    assert body["total"] == 1
-    assert body["datasets"][0]["language"]["code"] == "yor"
+    # Le seed grandit : on vérifie le filtre, pas un décompte figé.
+    assert body["total"] >= 1
+    assert all(
+        dataset["source"]["slug"] == "huggingface" and dataset["data_format"] == "audio"
+        for dataset in body["datasets"]
+    )
+    assert "yor" in {dataset["language"]["code"] for dataset in body["datasets"]}
 
 
 def test_task_filter_uses_controlled_vocabulary_not_raw_tags(catalog_client: TestClient) -> None:

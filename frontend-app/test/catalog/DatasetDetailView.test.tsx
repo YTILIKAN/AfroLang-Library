@@ -37,7 +37,7 @@ describe("DatasetDetailView (Story 1.12)", () => {
   it("redirige vers la source d'origine dans un nouvel onglet sécurisé", () => {
     render(<DatasetDetailView dataset={buildDatasetDetail()} />);
 
-    const link = screen.getByRole("link", { name: "Ouvrir sur la source" });
+    const link = screen.getByRole("link", { name: /Source externe/ });
     expect(link).toHaveAttribute("href", "https://huggingface.co/datasets/masakhane/yoruba-asr");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
@@ -51,11 +51,11 @@ describe("DatasetDetailView (Story 1.12)", () => {
 
   it("n'affiche la date de publication que si la source la fournit", () => {
     const { rerender } = render(<DatasetDetailView dataset={buildDatasetDetail()} />);
-    expect(screen.getByText(/Publié :/)).toBeInTheDocument();
+    expect(screen.getByText(/Publié ·/)).toBeInTheDocument();
 
     rerender(<DatasetDetailView dataset={buildDatasetDetail({ published_at: null })} />);
-    expect(screen.queryByText(/Publié :/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Indexé :/)).toBeInTheDocument();
+    expect(screen.queryByText(/Publié ·/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Indexé ·/)).toBeInTheDocument();
   });
 
   it("signale la provenance de l'entrée (AD-15)", () => {
