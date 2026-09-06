@@ -434,11 +434,23 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
         </form>
       ) : null}
 
+      <label className="flex flex-col gap-2">
+        <span className={labelMono}>Filtrer la liste (titre, langue, source, origine)</span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="yoruba, huggingface, manuel…"
+          className={`${inputClass} sm:max-w-md`}
+        />
+      </label>
+
       <section className={`overflow-hidden ${panelClass}`}>
         {loading ? (
           <p className="p-4 font-serif text-sm text-slate">Chargement…</p>
         ) : sortedDatasets.length === 0 ? (
           <p className="p-4 font-serif text-sm text-slate">Aucun dataset dans l&apos;index.</p>
+        ) : visibleDatasets.length === 0 ? (
+          <p className="p-4 font-serif text-sm text-slate">Aucun dataset ne correspond au filtre.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
@@ -504,7 +516,9 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
       </section>
 
       <p className="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-slate">
-        {sortedDatasets.length} entrée{sortedDatasets.length > 1 ? "s" : ""}
+        {query.trim()
+          ? `${visibleDatasets.length} / ${sortedDatasets.length} datasets`
+          : `${sortedDatasets.length} entrée${sortedDatasets.length > 1 ? "s" : ""}`}
       </p>
     </AdminShell>
   );

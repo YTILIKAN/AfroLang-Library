@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-import { DatasetDetailView } from "./DatasetDetailView";
+import { DatasetDetailView } from "@/components/catalog/DatasetDetailView";
 import { buildDatasetDetail } from "@/test/fixtures";
 
 describe("DatasetDetailView (Story 1.12)", () => {

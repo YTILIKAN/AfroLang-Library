@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { filterDatasets, getDataset, getLanguageOverview, listDatasets, searchDatasets } from "./catalog";
-import { ApiError } from "./client";
-import type { DatasetFilterResponse, DatasetSearchResponse } from "../types";
+import { filterDatasets, getDataset, getLanguageOverview, listDatasets, searchDatasets } from "@/lib/api/catalog";
+import { ApiError } from "@/lib/api/client";
+import type { DatasetFilterResponse, DatasetSearchResponse } from "@/lib/types";
 import { buildDataset, buildLanguageOverview } from "@/test/fixtures";
 
 // En jsdom, `window` existe et `NEXT_PUBLIC_API_URL` n'est pas défini : `getApiBaseUrl()`

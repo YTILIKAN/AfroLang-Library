@@ -122,7 +122,7 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
       </div>
 
       <label className="block space-y-2">
-        <span className={labelMono}>Titre</span>
+        <span className={labelMono}>Titre</span>*
         <input
           required
           value={form.title}
@@ -132,7 +132,7 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
       </label>
 
       <label className="block space-y-2">
-        <span className={labelMono}>URL source</span>
+        <span className={labelMono}>URL source</span>*
         <input
           required
           type="url"
@@ -142,7 +142,7 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
           className={inputClass}
         />
         <span className="font-serif text-[13px] text-slate">
-          Page web, dépôt Git ou lien direct — y compris sources sans API (FR-5).
+          Page web, dépôt Git ou lien direct.
         </span>
       </label>
 

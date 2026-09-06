@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { CatalogSearchBar } from "./CatalogSearchBar";
+import { CatalogSearchBar } from "@/components/catalog/CatalogSearchBar";
 
 const push = vi.fn();
 

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { SubmitDatasetForm } from "./SubmitDatasetForm";
+import { SubmitDatasetForm } from "@/components/contribute/SubmitDatasetForm";
 import { ApiError } from "@/lib/api/client";
 import { buildContribution } from "@/test/accounts";
 
@@ -15,7 +15,7 @@ const MANUAL_LABEL = /Source sans API publique/i;
 
 async function fillRequiredFields() {
   const user = userEvent.setup();
-  await user.type(screen.getByLabelText("Titre"), "Corpus Twi");
+  await user.type(screen.getByLabelText(/Titre/), "Corpus Twi");
   await user.type(screen.getByLabelText(/URL source/), "https://example.com/twi");
   await user.type(screen.getByLabelText("Langue"), "twi");
   return user;
@@ -113,6 +113,6 @@ describe("SubmitDatasetForm (Story 3.5)", () => {
     await user.click(screen.getByRole("button", { name: /Soumettre/i }));
 
     expect(await screen.findByText("Langue inconnue")).toBeInTheDocument();
-    expect(screen.getByLabelText("Titre")).toHaveValue("Corpus Twi");
+    expect(screen.getByLabelText(/Titre/)).toHaveValue("Corpus Twi");
   });
 });

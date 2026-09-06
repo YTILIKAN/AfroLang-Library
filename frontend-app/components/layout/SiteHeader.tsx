@@ -23,7 +23,6 @@ const ADMIN_NAV = [
 export function SiteHeader() {
   const pathname = usePathname();
   const { account, loading, logout } = useAuth();
-  const isAdminRoute = pathname.startsWith("/admin");
   // Accueil et /catalog portent déjà leur propre champ : le header en fournit un partout ailleurs.
   const showSearch = pathname !== "/" && !pathname.startsWith("/catalog");
 
@@ -52,7 +51,10 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          {account?.role === "admin" && isAdminRoute
+          {account?.role === "admin" ? (
+            <span className="h-3 w-px bg-hairline" aria-hidden />
+          ) : null}
+          {account?.role === "admin"
             ? ADMIN_NAV.map((item) => {
                 const isActive = pathname.startsWith(item.href);
                 return (

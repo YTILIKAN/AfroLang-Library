@@ -2,9 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AccountAdminPanel } from "./AccountAdminPanel";
+import { AccountAdminPanel } from "@/components/admin/AccountAdminPanel";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ApiError } from "@/lib/api/client";
 import { buildAccount } from "@/test/fixtures";
+
+// Le panneau rend AdminShell > SiteHeader, qui consomme le routeur et la session.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/admin/accounts",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const listAdminAccounts = vi.fn();
 const createAdminAccount = vi.fn();
@@ -13,6 +21,15 @@ vi.mock("@/lib/api/accounts", () => ({
   listAdminAccounts: () => listAdminAccounts(),
   createAdminAccount: (...args: unknown[]) => createAdminAccount(...args),
   updateAdminAccount: (...args: unknown[]) => updateAdminAccount(...args),
+  fetchMe: vi.fn().mockRejectedValue(new Error("pas de session")),
+  logout: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Sans jeton stocké, AuthProvider se stabilise sur une session anonyme sans appel réseau.
+vi.mock("@/lib/auth-storage", () => ({
+  getStoredToken: () => null,
+  clearStoredToken: vi.fn(),
+  setStoredToken: vi.fn(),
 }));
 
 /** L'admin connecté porte l'id 10 — les gardes d'auto-désactivation s'y réfèrent. */
@@ -20,11 +37,13 @@ const CURRENT_ADMIN_ID = 10;
 
 function renderPanel() {
   return render(
-    <AccountAdminPanel
-      adminName="Kofi"
-      currentAccountId={CURRENT_ADMIN_ID}
-      onLogout={vi.fn()}
-    />,
+    <AuthProvider>
+      <AccountAdminPanel
+        adminName="Kofi"
+        currentAccountId={CURRENT_ADMIN_ID}
+        onLogout={vi.fn()}
+      />
+    </AuthProvider>,
   );
 }
 
@@ -58,7 +77,7 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     expect(screen.getByLabelText("Rôle de Awa Ndiaye")).toHaveValue("chercheur");
     expect(screen.getByText("Actif")).toBeInTheDocument();
     expect(screen.getByText("Désactivé")).toBeInTheDocument();
-    expect(screen.getByText(/2 comptes — API \/accounts\/admin\/accounts/)).toBeInTheDocument();
+    expect(screen.getByText(/2 comptes/)).toBeInTheDocument();
   });
 
   it("crée un compte en lui attribuant un rôle (FR-20)", async () => {

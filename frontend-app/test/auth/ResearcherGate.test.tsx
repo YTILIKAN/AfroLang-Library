@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AuthProvider } from "./AuthProvider";
-import { ResearcherGate } from "./ResearcherGate";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ResearcherGate } from "@/components/auth/ResearcherGate";
 import { buildAccount } from "@/test/accounts";
 
 vi.mock("next/navigation", () => ({

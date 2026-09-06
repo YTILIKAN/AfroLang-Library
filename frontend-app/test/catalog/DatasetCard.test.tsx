@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { DatasetCard } from "./DatasetCard";
+import { DatasetCard } from "@/components/catalog/DatasetCard";
 import { buildDataset } from "@/test/fixtures";
 
 describe("DatasetCard", () => {

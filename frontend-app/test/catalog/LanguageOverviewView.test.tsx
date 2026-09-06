@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import { LanguageOverviewView } from "./LanguageOverviewView";
+import { LanguageOverviewView } from "@/components/catalog/LanguageOverviewView";
 import { buildLanguageOverview } from "@/test/fixtures";
 
 /** La `dd` qui suit le libellé « Disponibilité » porte les tâches couvertes. */

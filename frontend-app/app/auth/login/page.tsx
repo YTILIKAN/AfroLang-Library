@@ -10,7 +10,7 @@ import { pageShell, sectionGap } from "@/components/ui/styles";
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/contribute";
+  const redirectTo = searchParams.get("redirect") ?? undefined;
 
   return (
     <div className="flex min-h-full flex-col">

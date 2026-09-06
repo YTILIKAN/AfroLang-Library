@@ -63,12 +63,6 @@ export function ResearcherGate({ children }: ResearcherGateProps) {
     <GateFrame>
       <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6 py-16">
         <ResearcherLoginForm />
-        <div className={`text-center ${panelClass} p-5`}>
-          <p className="font-serif text-sm text-slate">Nouveau sur AfroLang-Library ?</p>
-          <Link href="/auth/register" className={`mt-4 inline-flex ${btnGhost}`}>
-            Créer un compte
-          </Link>
-        </div>
       </div>
     </GateFrame>
   );

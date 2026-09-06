@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { HOME_PREVIEW_SIZE, HomeCatalogSection } from "./HomeCatalogSection";
+import { HOME_PREVIEW_SIZE, HomeCatalogSection } from "@/components/home/HomeCatalogSection";
 import { buildDataset } from "@/test/fixtures";
 
 function buildDatasets(count: number) {

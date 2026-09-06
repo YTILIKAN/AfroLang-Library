@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ActiveFilterTags } from "./ActiveFilterTags";
+import { ActiveFilterTags } from "@/components/catalog/ActiveFilterTags";
 import { AppliedFilters } from "@/lib/types";
 
 function buildFilters(overrides: Partial<AppliedFilters> = {}): AppliedFilters {
