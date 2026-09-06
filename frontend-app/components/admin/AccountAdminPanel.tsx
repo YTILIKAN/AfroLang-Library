@@ -124,13 +124,37 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
     }
   }
 
+
+  function resetRoleSelects() {
+    setAccounts((current) => [...current]);
+  }
+
   async function handleRoleChange(account: Account, role: AccountRole) {
+    if (role === account.role) {
+      return;
+    }
+
+    if (account.id === currentAccountId) {
+      setError("Vous ne pouvez pas modifier votre propre rôle");
+      resetRoleSelects();
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Passer « ${account.display_name} » du rôle ${account.role} au rôle ${role} ?`,
+    );
+    if (!confirmed) {
+      resetRoleSelects();
+      return;
+    }
+
     setError(null);
     try {
       await updateAdminAccount(account.id, { role });
       await refreshAccounts();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Mise à jour impossible");
+      resetRoleSelects();
     }
   }
 
@@ -248,7 +272,9 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                         onChange={(event) =>
                           void handleRoleChange(account, event.target.value as AccountRole)
                         }
-                        disabled={account.is_super_admin === true}
+                        disabled={
+                          account.is_super_admin === true || account.id === currentAccountId
+                        }
                         className={`${selectClass} disabled:cursor-not-allowed`}
                         aria-label={`Rôle de ${account.display_name}`}
                       >

@@ -252,6 +252,13 @@ def admin_update_account(
                     raise PermissionError("Le rôle du compte super admin ne peut pas être modifié")
             if payload.role is not None and payload.role != AccountRole.ADMIN:
                 raise PermissionError("Le compte super admin doit conserver le rôle admin")
+        if (
+            acting_account_id is not None
+            and data["id"] == acting_account_id
+            and payload.role is not None
+            and payload.role != data["role"]
+        ):
+            raise PermissionError("Un admin ne peut pas modifier son propre rôle")
         if payload.display_name is not None:
             data["display_name"] = payload.display_name.strip()
         if payload.role is not None:

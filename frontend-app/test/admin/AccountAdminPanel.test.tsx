@@ -106,8 +106,9 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     expect(await screen.findByText("Aïcha Diallo")).toBeInTheDocument();
   });
 
-  it("attribue un nouveau rôle à un compte existant (FR-20)", async () => {
+  it("attribue un nouveau rôle à un compte existant après confirmation (FR-20)", async () => {
     const user = userEvent.setup();
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     const account = buildAccount({ id: 2, display_name: "Awa Ndiaye" });
     listAdminAccounts.mockResolvedValue({ total: 1, accounts: [account] });
     updateAdminAccount.mockResolvedValue({ ...account, role: "admin" });
@@ -115,7 +116,33 @@ describe("AccountAdminPanel (Story 4.4)", () => {
 
     await user.selectOptions(await screen.findByLabelText("Rôle de Awa Ndiaye"), "admin");
 
+    expect(window.confirm).toHaveBeenCalledWith(
+      "Passer « Awa Ndiaye » du rôle chercheur au rôle admin ?",
+    );
     await waitFor(() => expect(updateAdminAccount).toHaveBeenCalledWith(2, { role: "admin" }));
+  });
+
+  it("ne change aucun rôle si la confirmation est refusée", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+    const account = buildAccount({ id: 2, display_name: "Awa Ndiaye" });
+    listAdminAccounts.mockResolvedValue({ total: 1, accounts: [account] });
+    renderPanel();
+
+    const select = await screen.findByLabelText("Rôle de Awa Ndiaye");
+    await user.selectOptions(select, "admin");
+
+    expect(updateAdminAccount).not.toHaveBeenCalled();
+    // Le menu revient sur le rôle réellement enregistré, pas sur celui qui a été abandonné.
+    await waitFor(() => expect(select).toHaveValue("chercheur"));
+  });
+
+  it("interdit à l'admin de modifier son propre rôle", async () => {
+    listAdminAccounts.mockResolvedValue({ total: 1, accounts: [buildCurrentAdmin()] });
+    renderPanel();
+
+    expect(await screen.findByLabelText("Rôle de Kofi Mensah")).toBeDisabled();
+    expect(updateAdminAccount).not.toHaveBeenCalled();
   });
 
   it("désactive un compte puis recharge la liste (FR-20)", async () => {
@@ -171,8 +198,8 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     expect(await screen.findByText("super admin")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Désactiver Awa Ndiaye" })).toBeDisabled();
     expect(screen.getByLabelText("Rôle de Awa Ndiaye")).toBeDisabled();
-    // L'admin connecté garde ses propres commandes de rôle.
-    expect(screen.getByLabelText("Rôle de Kofi Mensah")).toBeEnabled();
+    // L'admin connecté ne peut pas non plus toucher à son propre rôle.
+    expect(screen.getByLabelText("Rôle de Kofi Mensah")).toBeDisabled();
     expect(updateAdminAccount).not.toHaveBeenCalled();
   });
 

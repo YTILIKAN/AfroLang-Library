@@ -250,6 +250,44 @@ def _make_super_admin(engine, email: str) -> int:
         return repository.promote_super_admin(account).id
 
 
+def test_admin_cannot_demote_itself(admin_accounts_client) -> None:
+    """Se rétrograder soi-même laissait l'interface admin ouverte mais tous ses appels en 403."""
+    client, engine = admin_accounts_client
+    _register(client, "solo@example.com")
+    _promote_to_admin(engine, "solo@example.com")
+    headers = {"Authorization": f"Bearer {_login(client, 'solo@example.com')}"}
+    me_id = client.get("/accounts/me", headers=headers).json()["id"]
+
+    demote = client.patch(
+        f"/accounts/admin/accounts/{me_id}",
+        headers=headers,
+        json={"role": "chercheur"},
+    )
+    assert demote.status_code == 403
+
+    # Le rôle tient : les routes admin répondent encore avec le même jeton.
+    assert client.get("/accounts/admin/accounts", headers=headers).status_code == 200
+    assert client.get("/accounts/me", headers=headers).json()["role"] == "admin"
+
+
+def test_admin_updates_own_name_with_role_unchanged(admin_accounts_client) -> None:
+    """Le garde ne vise que le changement de rôle — renvoyer le rôle courant reste permis."""
+    client, engine = admin_accounts_client
+    _register(client, "keeper@example.com")
+    _promote_to_admin(engine, "keeper@example.com")
+    headers = {"Authorization": f"Bearer {_login(client, 'keeper@example.com')}"}
+    me_id = client.get("/accounts/me", headers=headers).json()["id"]
+
+    response = client.patch(
+        f"/accounts/admin/accounts/{me_id}",
+        headers=headers,
+        json={"display_name": "Keeper", "role": "admin"},
+    )
+    assert response.status_code == 200
+    assert response.json()["display_name"] == "Keeper"
+    assert response.json()["role"] == "admin"
+
+
 def test_super_admin_cannot_be_disabled_by_another_admin(admin_accounts_client) -> None:
     client, engine = admin_accounts_client
     _register(client, "boss@example.com")

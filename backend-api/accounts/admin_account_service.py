@@ -78,6 +78,19 @@ class AdminAccountService:
                 detail="Le compte super admin doit conserver le rôle admin",
             )
 
+        if (
+            account.id == acting_admin.id
+            and payload.role is not None
+            and payload.role != account.role
+        ):
+            # Se rétrograder passait : le PATCH réussissait, puis tout appel admin suivant
+            # tombait en 403 alors que l'interface, dont la session est chargée au montage,
+            # continuait d'afficher le panneau. Un rôle se change par un autre admin.
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Un admin ne peut pas modifier son propre rôle",
+            )
+
         updated = self.repository.update_account(
             account,
             display_name=payload.display_name,
