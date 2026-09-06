@@ -24,15 +24,16 @@ def get_catalog_service(session: Session = Depends(get_session)) -> CatalogServi
 
 
 def _ensure_at_least_one_filter(
+    q: str | None,
     language: str | None,
     source: str | None,
     task: str | None,
     data_format: str | None,
 ) -> None:
-    if not any([language, source, task, data_format]):
+    if not any([q, language, source, task, data_format]):
         raise HTTPException(
             status_code=400,
-            detail="Au moins un filtre requis : language, source, task ou data_format.",
+            detail="Au moins un critère requis : q, language, source, task ou data_format.",
         )
 
 
@@ -67,7 +68,10 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
                     ApiEndpointInfo(
                         method="GET",
                         path="/api/v1/datasets/filter",
-                        description="Filtrage combiné par langue, source, tâche NLP et format.",
+                        description=(
+                            "Exploration combinée : recherche plein texte (q) et facettes "
+                            "langue, source, tâche NLP et format."
+                        ),
                     ),
                     ApiEndpointInfo(
                         method="GET",
@@ -145,13 +149,15 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
     @router.get(
         "/datasets/filter",
         response_model=DatasetFilterResponse,
-        summary="Filtrer les datasets",
+        summary="Explorer les datasets",
         description=(
-            "Filtrage combiné par langue, source, tâche NLP (vocabulaire contrôlé) "
-            "et format — valeurs normalisées (FR-12, FR-15)."
+            "Recherche plein texte sur les métadonnées (q) et filtrage combiné par langue, "
+            "source, tâche NLP (vocabulaire contrôlé) et format — valeurs normalisées "
+            "(FR-11, FR-12, FR-15). Les critères se cumulent en ET."
         ),
     )
     def filter_datasets(
+        q: str | None = Query(None, min_length=1, description="Recherche plein texte (titre, description, langue)"),
         language: str | None = Query(None, min_length=1, description="Code ou nom de langue"),
         source: str | None = Query(None, min_length=1, description="Slug de la source (ex. huggingface)"),
         task: str | None = Query(None, min_length=1, description="Code ou alias de tâche NLP"),
@@ -159,15 +165,17 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
         settings: Settings = Depends(get_settings),
         service: CatalogService = Depends(get_catalog_service),
     ) -> DatasetFilterResponse:
-        _ensure_at_least_one_filter(language, source, task, data_format)
+        _ensure_at_least_one_filter(q, language, source, task, data_format)
         if settings.catalog_stub:
             return catalog_stub.filter_datasets(
+                q=q,
                 language=language,
                 source=source,
                 task=task,
                 data_format=data_format,
             )
         return service.filter_datasets(
+            q=q,
             language=language,
             source=source,
             task=task,

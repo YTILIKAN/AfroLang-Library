@@ -54,6 +54,8 @@ function usePublicCatalogState() {
   useEffect(() => {
     let cancelled = false;
 
+    // 500 fiches pour les compteurs de l'en-tête (langues, tâches, sources) : l'API n'expose
+    // pas encore d'agrégat. La section n'en rend que HOME_PREVIEW_SIZE, le reste vit sur /catalog.
     listDatasets(500)
       .then((response) => {
         if (cancelled) {

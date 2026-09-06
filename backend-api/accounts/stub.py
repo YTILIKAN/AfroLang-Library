@@ -49,6 +49,7 @@ def _ensure_stub_accounts() -> None:
                 "role": AccountRole.ADMIN,
                 "password_hash": hash_password(_STUB_ADMIN_PASSWORD),
                 "is_active": True,
+                "is_super_admin": True,
             },
         }
     )
@@ -75,6 +76,7 @@ def _account_response(email: str, data: dict) -> AccountResponse:
         display_name=data["display_name"],
         role=data["role"],
         is_active=data.get("is_active", True),
+        is_super_admin=data.get("is_super_admin", False),
         created_at=datetime(2026, 1, 15, tzinfo=timezone.utc),
     )
 
@@ -232,11 +234,31 @@ def admin_create_account(payload: AdminAccountCreateRequest) -> AccountResponse:
     return _account_response(normalized, _STUB_ACCOUNTS[normalized])
 
 
-def admin_update_account(account_id: int, payload: AdminAccountUpdateRequest) -> AccountResponse:
+def admin_update_account(
+    account_id: int,
+    payload: AdminAccountUpdateRequest,
+    *,
+    acting_account_id: int | None = None,
+) -> AccountResponse:
     _ensure_stub_accounts()
     for email, data in _STUB_ACCOUNTS.items():
         if data["id"] != account_id:
             continue
+        if data.get("is_super_admin", False):
+            if account_id != acting_account_id:
+                if payload.is_active is False:
+                    raise PermissionError("Le compte super admin ne peut pas être désactivé")
+                if payload.role is not None and payload.role != data["role"]:
+                    raise PermissionError("Le rôle du compte super admin ne peut pas être modifié")
+            if payload.role is not None and payload.role != AccountRole.ADMIN:
+                raise PermissionError("Le compte super admin doit conserver le rôle admin")
+        if (
+            acting_account_id is not None
+            and data["id"] == acting_account_id
+            and payload.role is not None
+            and payload.role != data["role"]
+        ):
+            raise PermissionError("Un admin ne peut pas modifier son propre rôle")
         if payload.display_name is not None:
             data["display_name"] = payload.display_name.strip()
         if payload.role is not None:

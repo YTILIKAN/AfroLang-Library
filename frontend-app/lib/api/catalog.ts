@@ -32,6 +32,9 @@ export function searchDatasets(language: string): Promise<DatasetSearchResponse>
 
 export function filterDatasets(params: DatasetFilterParams): Promise<DatasetFilterResponse> {
   const query = new URLSearchParams();
+  if (params.q?.trim()) {
+    query.set("q", params.q.trim());
+  }
   if (params.language?.trim()) {
     query.set("language", params.language.trim());
   }
@@ -47,7 +50,7 @@ export function filterDatasets(params: DatasetFilterParams): Promise<DatasetFilt
 
   if ([...query.keys()].length === 0) {
     return Promise.reject(
-      new ApiError("Au moins un filtre requis : langue, source, tâche ou format.", 400),
+      new ApiError("Au moins un critère requis : recherche, langue, source, tâche ou format.", 400),
     );
   }
 

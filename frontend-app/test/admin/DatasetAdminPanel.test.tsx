@@ -2,9 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { DatasetAdminPanel } from "./DatasetAdminPanel";
+import { DatasetAdminPanel } from "@/components/admin/DatasetAdminPanel";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ApiError } from "@/lib/api/client";
 import { buildDataset } from "@/test/fixtures";
+
+// Le panneau rend AdminShell > SiteHeader, qui consomme le routeur et la session.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/admin/datasets",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const listAdminDatasets = vi.fn();
 const createAdminDataset = vi.fn();
@@ -15,10 +23,23 @@ vi.mock("@/lib/api/accounts", () => ({
   createAdminDataset: (...args: unknown[]) => createAdminDataset(...args),
   updateAdminDataset: (...args: unknown[]) => updateAdminDataset(...args),
   deleteAdminDataset: (...args: unknown[]) => deleteAdminDataset(...args),
+  fetchMe: vi.fn().mockRejectedValue(new Error("pas de session")),
+  logout: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Sans jeton stocké, AuthProvider se stabilise sur une session anonyme sans appel réseau.
+vi.mock("@/lib/auth-storage", () => ({
+  getStoredToken: () => null,
+  clearStoredToken: vi.fn(),
+  setStoredToken: vi.fn(),
 }));
 
 function renderPanel() {
-  return render(<DatasetAdminPanel adminName="Awa" onLogout={vi.fn()} />);
+  return render(
+    <AuthProvider>
+      <DatasetAdminPanel adminName="Awa" onLogout={vi.fn()} />
+    </AuthProvider>,
+  );
 }
 
 /** Trois entrées, une par origine — l'admin les gère toutes (FR-19). */
@@ -59,7 +80,7 @@ describe("DatasetAdminPanel (Story 4.3)", () => {
     expect(screen.getByText("synchronisé")).toBeInTheDocument();
     expect(screen.getByText("contribué")).toBeInTheDocument();
     expect(screen.getByText("manuel")).toBeInTheDocument();
-    expect(screen.getByText(/3 datasets — API \/accounts\/admin\/datasets/)).toBeInTheDocument();
+    expect(screen.getByText(/3 entrées/)).toBeInTheDocument();
   });
 
   it("ajoute un dataset sans inventer les métadonnées laissées vides", async () => {

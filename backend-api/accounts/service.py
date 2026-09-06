@@ -17,6 +17,7 @@ def account_to_response(account: Account) -> AccountResponse:
         display_name=account.display_name,
         role=account.role,
         is_active=account.is_active,
+        is_super_admin=account.is_super_admin,
         created_at=account.created_at,
     )
 

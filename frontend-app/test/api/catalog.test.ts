@@ -1,16 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { filterDatasets, getDataset, getLanguageOverview, listDatasets, searchDatasets } from "./catalog";
-import { ApiError } from "./client";
-import type { DatasetFilterResponse, DatasetSearchResponse } from "../types";
+import { filterDatasets, getDataset, getLanguageOverview, listDatasets, searchDatasets } from "@/lib/api/catalog";
+import { ApiError } from "@/lib/api/client";
+import type { DatasetFilterResponse, DatasetSearchResponse } from "@/lib/types";
 import { buildDataset, buildLanguageOverview } from "@/test/fixtures";
 
-const API_URL = "http://127.0.0.1:8000";
+// En jsdom, `window` existe et `NEXT_PUBLIC_API_URL` n'est pas défini : `getApiBaseUrl()`
+// renvoie le proxy Next `/api-backend` (rewrite de next.config.ts), pas l'URL directe.
+const API_URL = "/api-backend";
 
 function stubJsonResponse(payload: unknown) {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
     json: () => Promise.resolve(payload),
+    text: () => Promise.resolve(JSON.stringify(payload)),
   });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
@@ -21,6 +24,7 @@ function stubErrorResponse(status: number, detail: string) {
     ok: false,
     status,
     json: () => Promise.resolve({ detail }),
+    text: () => Promise.resolve(JSON.stringify({ detail })),
   });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
@@ -111,6 +115,7 @@ describe("searchDatasets", () => {
 
 const sampleFilterResponse: DatasetFilterResponse = {
   filters: {
+    q: null,
     language: "Swahili",
     language_code: "swh",
     source: null,
@@ -146,6 +151,16 @@ describe("filterDatasets", () => {
 
     expect(calledUrl(fetchMock)).toBe(
       `${API_URL}/api/v1/datasets/filter?language=swahili&source=kaggle&task=asr&data_format=text`,
+    );
+  });
+
+  it("envoie la recherche plein texte en premier paramètre", async () => {
+    const fetchMock = stubJsonResponse(sampleFilterResponse);
+
+    await filterDatasets({ q: "corpus asr", language: "swahili" });
+
+    expect(calledUrl(fetchMock)).toBe(
+      `${API_URL}/api/v1/datasets/filter?q=corpus+asr&language=swahili`,
     );
   });
 

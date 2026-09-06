@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ActiveFilterTags } from "./ActiveFilterTags";
+import { ActiveFilterTags } from "@/components/catalog/ActiveFilterTags";
 import { AppliedFilters } from "@/lib/types";
 
 function buildFilters(overrides: Partial<AppliedFilters> = {}): AppliedFilters {
   return {
+    q: null,
     language: null,
     language_code: null,
     source: null,
@@ -20,6 +21,12 @@ describe("ActiveFilterTags", () => {
     const { container } = render(<ActiveFilterTags filters={buildFilters()} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("affiche la requête plein texte comme critère à part entière", () => {
+    render(<ActiveFilterTags filters={buildFilters({ q: "corpus asr" })} />);
+
+    expect(screen.getByText("Recherche · corpus asr")).toBeInTheDocument();
   });
 
   it("affiche la langue avec son code normalisé côté serveur (Story 2.1)", () => {
@@ -42,6 +49,7 @@ describe("ActiveFilterTags", () => {
     render(
       <ActiveFilterTags
         filters={buildFilters({
+          q: "corpus",
           language: "Swahili",
           language_code: "swh",
           source: "huggingface",
@@ -52,7 +60,8 @@ describe("ActiveFilterTags", () => {
       />,
     );
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.getByText("Recherche · corpus")).toBeInTheDocument();
     expect(screen.getByText("Source · huggingface")).toBeInTheDocument();
     expect(screen.getByText("Tâche · ASR (asr)")).toBeInTheDocument();
     expect(screen.getByText("Format · audio")).toBeInTheDocument();

@@ -113,17 +113,20 @@ def get_dataset_detail(dataset_id: int) -> DatasetDetailResponse | None:
 
 def filter_datasets(
     *,
+    q: str | None = None,
     language: str | None = None,
     source: str | None = None,
     task: str | None = None,
     data_format: str | None = None,
 ) -> DatasetFilterResponse:
+    text_query = q.strip() if q and q.strip() else None
     language_code = resolve_language_code(language) if language else None
     task_code = resolve_task_filter(task.strip()) if task else None
     source_slug = normalize_source_slug(source) if source else None
     normalized_format = normalize_data_format(data_format) if data_format else None
 
     filters = AppliedFiltersResponse(
+        q=text_query,
         language=language,
         language_code=language_code,
         source=source_slug,
@@ -137,8 +140,12 @@ def filter_datasets(
     if task and task_code is None:
         return DatasetFilterResponse(filters=filters, total=0, datasets=[])
 
+    needle = text_query.casefold() if text_query else None
+
     matches: list[DatasetSummaryResponse] = []
     for dataset in _STUB_DATASETS:
+        if needle and needle not in f"{dataset.title} {dataset.description}".casefold():
+            continue
         if language_code and dataset.language.code != language_code:
             continue
         if source_slug and dataset.source.slug != source_slug:

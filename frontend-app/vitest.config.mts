@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: { tsconfigPaths: true },
   test: {
+    // Les tests vivent tous sous test/, organisés par dossier de composants.
+    include: ["test/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     // Le pool "forks" n'arrive pas à démarrer ses workers depuis un chemin OneDrive

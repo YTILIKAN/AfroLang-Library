@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { ResearcherLoginForm } from "./AuthForms";
-import { AuthProvider } from "./AuthProvider";
+import { ResearcherLoginForm } from "@/components/auth/AuthForms";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ApiError } from "@/lib/api/client";
 import { buildAccount } from "@/test/accounts";
 

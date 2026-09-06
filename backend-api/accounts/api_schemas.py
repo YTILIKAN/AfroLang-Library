@@ -23,6 +23,7 @@ class AccountResponse(BaseModel):
     display_name: str
     role: AccountRole
     is_active: bool
+    is_super_admin: bool = False
     created_at: datetime
 
 
@@ -68,6 +69,8 @@ class AdminAccountsResponse(BaseModel):
 
 
 class AdminAccountCreateRequest(BaseModel):
+    """Le drapeau `is_super_admin` est volontairement absent — il n'est jamais assignable via l'API."""
+
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     display_name: str = Field(min_length=1, max_length=120)
@@ -75,6 +78,8 @@ class AdminAccountCreateRequest(BaseModel):
 
 
 class AdminAccountUpdateRequest(BaseModel):
+    """Le drapeau `is_super_admin` est volontairement absent — il n'est jamais modifiable via l'API."""
+
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
     role: AccountRole | None = None
     is_active: bool | None = None

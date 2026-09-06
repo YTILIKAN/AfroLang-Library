@@ -120,13 +120,15 @@ class CatalogService:
     def filter_datasets(
         self,
         *,
+        q: str | None = None,
         language: str | None = None,
         source: str | None = None,
         task: str | None = None,
         data_format: str | None = None,
     ) -> DatasetFilterResponse:
-        """Filtre combiné sur valeurs normalisées — langue, source, tâche, format (FR-12)."""
+        """Exploration unifiée : plein texte et facettes normalisées, en ET (FR-11, FR-12)."""
         resolved = self._resolve_filters(
+            q=q,
             language=language,
             source=source,
             task=task,
@@ -134,34 +136,48 @@ class CatalogService:
         )
 
         if resolved.language_query and resolved.language_code is None:
-            return DatasetFilterResponse(
-                filters=self._applied_filters(resolved),
-                total=0,
-                datasets=[],
-            )
+            return self._empty_filter_response(resolved)
 
         if resolved.task_query and resolved.task_code is None:
-            return DatasetFilterResponse(
-                filters=self._applied_filters(resolved),
-                total=0,
-                datasets=[],
-            )
+            return self._empty_filter_response(resolved)
+
+        # Le plein texte restreint l'ensemble avant les facettes : la recherche donne les
+        # candidats, les facettes les réduisent (AD-3).
+        matched_ids: list[int] | None = None
+        if resolved.text_query:
+            matched_ids = self.repository.search_dataset_ids(resolved.text_query)
+            if not matched_ids:
+                return self._empty_filter_response(resolved)
 
         datasets = self.repository.filter_datasets(
             language_code=resolved.language_code,
             source_slug=resolved.source_slug,
             task_code=resolved.task_code,
             data_format=resolved.data_format,
+            dataset_ids=matched_ids,
         )
+
+        if matched_ids is not None:
+            rank = {dataset_id: index for index, dataset_id in enumerate(matched_ids)}
+            datasets.sort(key=lambda dataset: rank.get(dataset.id, len(rank)))
+
         return DatasetFilterResponse(
             filters=self._applied_filters(resolved),
             total=len(datasets),
             datasets=[dataset_to_summary(dataset) for dataset in datasets],
         )
 
+    def _empty_filter_response(self, resolved: ResolvedFilters) -> DatasetFilterResponse:
+        return DatasetFilterResponse(
+            filters=self._applied_filters(resolved),
+            total=0,
+            datasets=[],
+        )
+
     def _resolve_filters(
         self,
         *,
+        q: str | None,
         language: str | None,
         source: str | None,
         task: str | None,
@@ -180,6 +196,7 @@ class CatalogService:
         normalized_format = normalize_data_format(data_format) if data_format else None
 
         return ResolvedFilters(
+            text_query=q.strip() if q and q.strip() else None,
             language_query=language,
             language_code=language_code,
             source_slug=source_slug,
@@ -191,6 +208,7 @@ class CatalogService:
     @staticmethod
     def _applied_filters(resolved: ResolvedFilters) -> AppliedFiltersResponse:
         return AppliedFiltersResponse(
+            q=resolved.text_query,
             language=resolved.language_query,
             language_code=resolved.language_code,
             source=resolved.source_slug,

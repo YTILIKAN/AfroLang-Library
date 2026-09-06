@@ -8,6 +8,9 @@ interface ActiveFilterTagsProps {
 export function ActiveFilterTags({ filters }: ActiveFilterTagsProps) {
   const tags: string[] = [];
 
+  if (filters.q) {
+    tags.push(`Recherche · ${filters.q}`);
+  }
   if (filters.language) {
     tags.push(
       filters.language_code && filters.language_code !== "inconnu"

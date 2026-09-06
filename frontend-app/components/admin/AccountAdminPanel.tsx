@@ -124,13 +124,37 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
     }
   }
 
+
+  function resetRoleSelects() {
+    setAccounts((current) => [...current]);
+  }
+
   async function handleRoleChange(account: Account, role: AccountRole) {
+    if (role === account.role) {
+      return;
+    }
+
+    if (account.id === currentAccountId) {
+      setError("Vous ne pouvez pas modifier votre propre rôle");
+      resetRoleSelects();
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Passer « ${account.display_name} » du rôle ${account.role} au rôle ${role} ?`,
+    );
+    if (!confirmed) {
+      resetRoleSelects();
+      return;
+    }
+
     setError(null);
     try {
       await updateAdminAccount(account.id, { role });
       await refreshAccounts();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Mise à jour impossible");
+      resetRoleSelects();
     }
   }
 
@@ -237,6 +261,9 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                   <tr key={account.id} className="border-b border-hairline last:border-none">
                     <td className="px-4 py-3 font-serif text-sm font-medium text-ink-black">
                       {account.display_name}
+                      {account.is_super_admin ? (
+                        <span className={`ml-2 ${tagClass}`}>super admin</span>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 font-serif text-sm text-graphite">{account.email}</td>
                     <td className="px-4 py-3">
@@ -245,7 +272,10 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                         onChange={(event) =>
                           void handleRoleChange(account, event.target.value as AccountRole)
                         }
-                        className={selectClass}
+                        disabled={
+                          account.is_super_admin === true || account.id === currentAccountId
+                        }
+                        className={`${selectClass} disabled:cursor-not-allowed`}
                         aria-label={`Rôle de ${account.display_name}`}
                       >
                         {ROLE_OPTIONS.map((role) => (
@@ -262,7 +292,10 @@ export function AccountAdminPanel({ onLogout, adminName, currentAccountId }: Acc
                       <button
                         type="button"
                         onClick={() => void handleToggleActive(account)}
-                        disabled={account.id === currentAccountId && account.is_active}
+                        disabled={
+                          account.is_super_admin === true ||
+                          (account.id === currentAccountId && account.is_active)
+                        }
                         className={`${btnGhost} disabled:cursor-not-allowed`}
                         aria-label={`${account.is_active ? "Désactiver" : "Réactiver"} ${account.display_name}`}
                       >

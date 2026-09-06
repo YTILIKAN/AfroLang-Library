@@ -17,7 +17,7 @@ export default function ContributeSubmitPage() {
               href="/contribute"
               className="font-mono-ui text-[10px] uppercase tracking-wide text-slate hover:text-ink-black"
             >
-              ← Contribution
+              ← Contribuer
             </Link>
             <SubmitDatasetForm />
           </div>

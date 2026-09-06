@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { MyDatasetsPanel } from "./MyDatasetsPanel";
+import { MyDatasetsPanel } from "@/components/contribute/MyDatasetsPanel";
 import { ApiError } from "@/lib/api/client";
 import { buildContribution } from "@/test/accounts";
 
@@ -36,7 +36,7 @@ describe("MyDatasetsPanel (Story 3.6)", () => {
 
     expect(await screen.findByText("Corpus Twi")).toBeInTheDocument();
     expect(screen.getByText("Archive Ewe")).toBeInTheDocument();
-    expect(screen.getByText("2 contributions — API /accounts/datasets/mine")).toBeInTheDocument();
+    expect(screen.getByText("2 contributions")).toBeInTheDocument();
   });
 
   it("propose de soumettre quand le chercheur n'a encore rien contribué", async () => {

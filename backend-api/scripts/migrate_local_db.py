@@ -36,14 +36,53 @@ ADDED_COLUMNS: list[tuple[str, str, str, str | None]] = [
         "INTEGER",
         "ix_dataset_contributor_account_id",
     ),
+    # Compte super admin protégé — le seed promeut l'admin existant après cet ajout.
+    (
+        "account",
+        "is_super_admin",
+        "BOOLEAN NOT NULL DEFAULT FALSE",  # `FALSE` passe sur SQLite comme sur Postgres
+        "ix_account_is_super_admin",
+    ),
 ]
 
 
 def resolve_db_path() -> Path:
     url = get_settings().database_url
     if not url.startswith(SQLITE_PREFIX):
-        raise SystemExit(f"Ce script ne gère que SQLite (database_url = {url}).")
+        raise SystemExit(f"Cette branche ne traite que SQLite (database_url = {url}).")
     return Path(url[len(SQLITE_PREFIX) :]).resolve()
+
+
+def migrate_other_engine() -> int:
+    """Ajoute les colonnes manquantes sur un moteur non-SQLite (Postgres en dev/prod).
+
+    Pas de sauvegarde automatique ici : sur un serveur, la copie relève de l'outillage
+    de la base, pas de ce script. Les ajouts restent purement additifs.
+    """
+    from sqlalchemy import inspect, text
+
+    from core.database import get_engine
+
+    engine = get_engine()
+    inspector = inspect(engine)
+    added = 0
+    with engine.begin() as connection:
+        for table, column, definition, index_name in ADDED_COLUMNS:
+            if table not in inspector.get_table_names():
+                print(f"  - {table}.{column} : table absente, sera créée par init_db()")
+                continue
+            if column in {col["name"] for col in inspector.get_columns(table)}:
+                print(f"  - {table}.{column} : déjà présente")
+                continue
+
+            connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
+            if index_name:
+                connection.execute(
+                    text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table} ({column})")
+                )
+            print(f"  + {table}.{column} : ajoutée")
+            added += 1
+    return added
 
 
 def backup(db_path: Path) -> Path:
@@ -85,6 +124,15 @@ def add_missing_columns(db_path: Path) -> int:
 
 
 def main() -> None:
+    if not get_settings().database_url.startswith(SQLITE_PREFIX):
+        print(f"Base : {get_settings().database_url}")
+        print("Colonnes :")
+        added = migrate_other_engine()
+        print("Tables manquantes : délégué à init_db()")
+        init_db()
+        print(f"Terminé — {added} colonne(s) ajoutée(s).")
+        return
+
     db_path = resolve_db_path()
     if not db_path.exists():
         print(f"Aucune base à migrer ({db_path}) — init_db() la créera au démarrage.")

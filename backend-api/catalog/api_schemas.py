@@ -74,6 +74,7 @@ class DatasetDetailResponse(DatasetSummaryResponse):
 class AppliedFiltersResponse(BaseModel):
     """Filtres appliqués après normalisation (Story 2.1)."""
 
+    q: str | None = Field(default=None, description="Requête plein texte telle que reçue")
     language: str | None = Field(default=None, description="Paramètre langue tel que reçu")
     language_code: str | None = Field(default=None, description="Code ISO 639-3 résolu")
     source: str | None = Field(default=None, description="Slug source normalisé")

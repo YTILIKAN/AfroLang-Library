@@ -7,9 +7,7 @@ const FOOTER_COLUMNS: {
   {
     title: "Catalogue",
     links: [
-      { label: "Recherche", href: "/search" },
-      { label: "Filtrage", href: "/filter" },
-      { label: "Langues", href: "/languages" },
+      { label: "Explorer", href: "/catalog" },
       { label: "Documentation API", href: "/api-docs" },
     ],
   },

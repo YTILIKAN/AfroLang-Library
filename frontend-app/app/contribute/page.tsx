@@ -13,7 +13,7 @@ function ContributeHub({ account, onLogout }: { account: Account; onLogout: () =
     <WorkflowShell sidebar={<ContributeNav />}>
       <div className="space-y-8">
         <WorkflowHeader
-          eyebrow="Espace chercheur"
+          eyebrow={account.role === "chercheur" ? "Chercheur" : "Administrateur"}
           title="Contribuer à l'index"
           description={`Connecté en tant que ${account.display_name} — soumettez et gérez vos datasets.`}
           actions={<span className={tagClass}>{account.email}</span>}

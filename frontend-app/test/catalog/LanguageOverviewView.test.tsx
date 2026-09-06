@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import { LanguageOverviewView } from "./LanguageOverviewView";
+import { LanguageOverviewView } from "@/components/catalog/LanguageOverviewView";
 import { buildLanguageOverview } from "@/test/fixtures";
 
-/** La `dd` qui suit le libellé « Disponibilité » porte les tâches couvertes. */
+/** La `dd` qui suit le libellé « Couverture » porte les tâches couvertes. */
 function coverageList(): HTMLElement {
-  const term = screen.getByText("Disponibilité");
+  const term = screen.getByText("Couverture");
   const list = term.nextElementSibling;
   if (!(list instanceof HTMLElement)) {
     throw new Error("Liste des tâches couvertes introuvable");
@@ -18,7 +18,8 @@ describe("LanguageOverviewView", () => {
     render(<LanguageOverviewView overview={buildLanguageOverview()} />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Yoruba" })).toBeInTheDocument();
-    expect(screen.getByText(/^Code/)).toHaveTextContent("Code yor");
+    // Le code, la famille et la région tiennent dans le sous-titre de l'en-tête.
+    expect(screen.getByText(/^yor ·/)).toHaveTextContent("yor · Niger-Congo · Afrique de l'Ouest");
   });
 
   it("affiche la famille et la région quand elles sont connues", () => {
@@ -72,7 +73,7 @@ describe("LanguageOverviewView", () => {
 
     render(<LanguageOverviewView overview={overview} />);
 
-    expect(within(coverageList()).getByText(/Aucune tâche référencée/i)).toBeInTheDocument();
+    expect(within(coverageList()).getByText("—")).toBeInTheDocument();
   });
 
   it("se replie sur la requête quand la langue est inconnue de l'index", () => {
@@ -87,7 +88,7 @@ describe("LanguageOverviewView", () => {
     render(<LanguageOverviewView overview={overview} />);
 
     expect(screen.getByRole("heading", { level: 1, name: /Langue non reconnue/i })).toBeInTheDocument();
-    expect(screen.getByText(/Aucune entrée dans l'index/)).toHaveTextContent("zzz");
+    expect(screen.getByText(/Aucune entrée pour/)).toHaveTextContent("zzz");
     expect(screen.queryByText("Datasets")).not.toBeInTheDocument();
   });
 

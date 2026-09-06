@@ -68,6 +68,7 @@ def get_current_account(
             display_name=stub_account.display_name,
             role=stub_account.role,
             is_active=stub_account.is_active,
+            is_super_admin=stub_account.is_super_admin,
             password_hash="stub",
             created_at=stub_account.created_at,
             updated_at=stub_account.created_at,
@@ -318,9 +319,13 @@ def admin_update_account(
 ) -> AccountResponse:
     if settings.accounts_stub:
         try:
-            return accounts_stub.admin_update_account(account_id, payload)
+            return accounts_stub.admin_update_account(
+                account_id, payload, acting_account_id=account.id
+            )
         except LookupError as exc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        except PermissionError as exc:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
     return admin_account_service.update_account(account_id, payload, acting_admin=account)
 
 

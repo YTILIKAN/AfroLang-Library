@@ -5,6 +5,7 @@ from ingestion.normalization.vocabulary import resolve_task_code
 
 @dataclass(frozen=True)
 class ResolvedFilters:
+    text_query: str | None = None
     language_query: str | None = None
     language_code: str | None = None
     source_slug: str | None = None

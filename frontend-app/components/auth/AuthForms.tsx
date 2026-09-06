@@ -90,7 +90,7 @@ interface ResearcherLoginFormProps {
   redirectTo?: string;
 }
 
-export function ResearcherLoginForm({ redirectTo = "/contribute" }: ResearcherLoginFormProps) {
+export function ResearcherLoginForm({ redirectTo }: ResearcherLoginFormProps) {
   const router = useRouter();
   const { setAccount } = useAuth();
   const [email, setEmail] = useState("");
@@ -111,7 +111,11 @@ export function ResearcherLoginForm({ redirectTo = "/contribute" }: ResearcherLo
       }
       setStoredToken(response.access_token);
       setAccount(response.account);
-      router.push(redirectTo);
+      // Sans destination explicite, un admin va dans sa console plutôt que dans
+      // l'espace contribution, qui ne montre que les fonctions chercheur.
+      router.push(
+        redirectTo ?? (response.account.role === "admin" ? "/admin/datasets" : "/contribute"),
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Connexion impossible");
     } finally {

@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AdminGate } from "./AdminGate";
-import { AuthProvider } from "./AuthProvider";
+import { AdminGate } from "@/components/auth/AdminGate";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { buildAccount } from "@/test/accounts";
 
 vi.mock("next/navigation", () => ({
@@ -64,7 +64,7 @@ describe("AdminGate (Story 4.3)", () => {
     fetchMe.mockResolvedValue(buildAccount({ role: "chercheur" }));
     renderGate();
 
-    expect(await screen.findByText("Interface réservée aux administrateurs")).toBeInTheDocument();
+    expect(await screen.findByText("Réservé aux administrateurs")).toBeInTheDocument();
     expect(screen.queryByText(/Console admin/)).not.toBeInTheDocument();
   });
 
@@ -83,7 +83,7 @@ describe("AdminGate (Story 4.3)", () => {
     await user.type(screen.getByLabelText("Mot de passe"), "password123");
     await user.click(screen.getByRole("button", { name: "Se connecter" }));
 
-    expect(await screen.findByText("Interface réservée aux administrateurs")).toBeInTheDocument();
+    expect(await screen.findByText("Réservé aux administrateurs")).toBeInTheDocument();
     expect(clearStoredToken).toHaveBeenCalled();
     expect(screen.queryByText(/Console admin/)).not.toBeInTheDocument();
   });

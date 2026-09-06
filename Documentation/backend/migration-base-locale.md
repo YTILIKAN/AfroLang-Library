@@ -25,6 +25,10 @@ cd backend-api
 python -m scripts.migrate_local_db                       # Linux / macOS
 ```
 
+Le script traite SQLite **et** Postgres : il choisit la branche selon `DATABASE_URL`. La
+sauvegarde automatique décrite ci-dessous ne concerne que SQLite — sur Postgres, la copie relève
+de l'outillage de la base.
+
 Le script est idempotent — le relancer sans rien à faire ne coûte rien. Il :
 
 1. sauvegarde la base (`aflang.db.bak-<horodatage>`, ignorée par git) ;
@@ -67,3 +71,4 @@ Les routes `catalog` répondent alors depuis `catalog/stub.py`, avec trois datas
 | Date | Colonne | Story |
 |---|---|---|
 | 2026-08-06 | `dataset.contributor_account_id` | 3.2 — contribution d'un dataset par un chercheur |
+| 2026-09-06 | `account.is_super_admin` | Compte super admin protégé ([compte-super-admin.md](./compte-super-admin.md)) |

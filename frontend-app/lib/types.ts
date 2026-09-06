@@ -8,6 +8,8 @@ export interface Account {
   display_name: string;
   role: AccountRole;
   is_active: boolean;
+  /** Compte super admin : ni désactivable ni rétrogradable par un autre admin. */
+  is_super_admin?: boolean;
   created_at: string;
 }
 
@@ -82,6 +84,7 @@ export interface DatasetSearchResponse {
 
 /** Filtres appliqués après normalisation côté serveur (Story 2.1). */
 export interface AppliedFilters {
+  q: string | null;
   language: string | null;
   language_code: string | null;
   source: string | null;
@@ -98,6 +101,8 @@ export interface DatasetFilterResponse {
 }
 
 export interface DatasetFilterParams {
+  /** Recherche plein texte sur titre, description et langue. */
+  q?: string;
   language?: string;
   source?: string;
   task?: string;

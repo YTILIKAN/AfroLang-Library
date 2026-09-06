@@ -2,9 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { AccountAdminPanel } from "./AccountAdminPanel";
+import { AccountAdminPanel } from "@/components/admin/AccountAdminPanel";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ApiError } from "@/lib/api/client";
 import { buildAccount } from "@/test/fixtures";
+
+// Le panneau rend AdminShell > SiteHeader, qui consomme le routeur et la session.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/admin/accounts",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const listAdminAccounts = vi.fn();
 const createAdminAccount = vi.fn();
@@ -13,6 +21,15 @@ vi.mock("@/lib/api/accounts", () => ({
   listAdminAccounts: () => listAdminAccounts(),
   createAdminAccount: (...args: unknown[]) => createAdminAccount(...args),
   updateAdminAccount: (...args: unknown[]) => updateAdminAccount(...args),
+  fetchMe: vi.fn().mockRejectedValue(new Error("pas de session")),
+  logout: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Sans jeton stocké, AuthProvider se stabilise sur une session anonyme sans appel réseau.
+vi.mock("@/lib/auth-storage", () => ({
+  getStoredToken: () => null,
+  clearStoredToken: vi.fn(),
+  setStoredToken: vi.fn(),
 }));
 
 /** L'admin connecté porte l'id 10 — les gardes d'auto-désactivation s'y réfèrent. */
@@ -20,11 +37,13 @@ const CURRENT_ADMIN_ID = 10;
 
 function renderPanel() {
   return render(
-    <AccountAdminPanel
-      adminName="Kofi"
-      currentAccountId={CURRENT_ADMIN_ID}
-      onLogout={vi.fn()}
-    />,
+    <AuthProvider>
+      <AccountAdminPanel
+        adminName="Kofi"
+        currentAccountId={CURRENT_ADMIN_ID}
+        onLogout={vi.fn()}
+      />
+    </AuthProvider>,
   );
 }
 
@@ -58,7 +77,7 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     expect(screen.getByLabelText("Rôle de Awa Ndiaye")).toHaveValue("chercheur");
     expect(screen.getByText("Actif")).toBeInTheDocument();
     expect(screen.getByText("Désactivé")).toBeInTheDocument();
-    expect(screen.getByText(/2 comptes — API \/accounts\/admin\/accounts/)).toBeInTheDocument();
+    expect(screen.getByText(/2 comptes/)).toBeInTheDocument();
   });
 
   it("crée un compte en lui attribuant un rôle (FR-20)", async () => {
@@ -87,8 +106,9 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     expect(await screen.findByText("Aïcha Diallo")).toBeInTheDocument();
   });
 
-  it("attribue un nouveau rôle à un compte existant (FR-20)", async () => {
+  it("attribue un nouveau rôle à un compte existant après confirmation (FR-20)", async () => {
     const user = userEvent.setup();
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     const account = buildAccount({ id: 2, display_name: "Awa Ndiaye" });
     listAdminAccounts.mockResolvedValue({ total: 1, accounts: [account] });
     updateAdminAccount.mockResolvedValue({ ...account, role: "admin" });
@@ -96,7 +116,33 @@ describe("AccountAdminPanel (Story 4.4)", () => {
 
     await user.selectOptions(await screen.findByLabelText("Rôle de Awa Ndiaye"), "admin");
 
+    expect(window.confirm).toHaveBeenCalledWith(
+      "Passer « Awa Ndiaye » du rôle chercheur au rôle admin ?",
+    );
     await waitFor(() => expect(updateAdminAccount).toHaveBeenCalledWith(2, { role: "admin" }));
+  });
+
+  it("ne change aucun rôle si la confirmation est refusée", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+    const account = buildAccount({ id: 2, display_name: "Awa Ndiaye" });
+    listAdminAccounts.mockResolvedValue({ total: 1, accounts: [account] });
+    renderPanel();
+
+    const select = await screen.findByLabelText("Rôle de Awa Ndiaye");
+    await user.selectOptions(select, "admin");
+
+    expect(updateAdminAccount).not.toHaveBeenCalled();
+    // Le menu revient sur le rôle réellement enregistré, pas sur celui qui a été abandonné.
+    await waitFor(() => expect(select).toHaveValue("chercheur"));
+  });
+
+  it("interdit à l'admin de modifier son propre rôle", async () => {
+    listAdminAccounts.mockResolvedValue({ total: 1, accounts: [buildCurrentAdmin()] });
+    renderPanel();
+
+    expect(await screen.findByLabelText("Rôle de Kofi Mensah")).toBeDisabled();
+    expect(updateAdminAccount).not.toHaveBeenCalled();
   });
 
   it("désactive un compte puis recharge la liste (FR-20)", async () => {
@@ -131,6 +177,29 @@ describe("AccountAdminPanel (Story 4.4)", () => {
     renderPanel();
 
     expect(await screen.findByRole("button", { name: "Désactiver Kofi Mensah" })).toBeDisabled();
+    expect(updateAdminAccount).not.toHaveBeenCalled();
+  });
+
+  it("verrouille les commandes du compte super admin", async () => {
+    listAdminAccounts.mockResolvedValue({
+      total: 2,
+      accounts: [
+        buildCurrentAdmin(),
+        buildAccount({
+          id: 2,
+          display_name: "Awa Ndiaye",
+          role: "admin",
+          is_super_admin: true,
+        }),
+      ],
+    });
+    renderPanel();
+
+    expect(await screen.findByText("super admin")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Désactiver Awa Ndiaye" })).toBeDisabled();
+    expect(screen.getByLabelText("Rôle de Awa Ndiaye")).toBeDisabled();
+    // L'admin connecté ne peut pas non plus toucher à son propre rôle.
+    expect(screen.getByLabelText("Rôle de Kofi Mensah")).toBeDisabled();
     expect(updateAdminAccount).not.toHaveBeenCalled();
   });
 
