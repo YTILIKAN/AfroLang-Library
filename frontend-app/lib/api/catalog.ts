@@ -5,6 +5,7 @@ import {
   DatasetListResponse,
   DatasetSearchResponse,
   LanguageOverviewResponse,
+  SupportedLanguagesResponse,
 } from "../types";
 import { ApiError, apiRequest } from "./client";
 
@@ -62,6 +63,11 @@ export function filterDatasets(params: DatasetFilterParams): Promise<DatasetFilt
 
 export function getDataset(id: number): Promise<DatasetDetail> {
   return apiRequest<DatasetDetail>(`${CATALOG_PREFIX}/datasets/${id}`, READ_ONLY);
+}
+
+/** Vocabulaire des langues couvertes, proposé à la saisie (FR-11). */
+export function listLanguages(): Promise<SupportedLanguagesResponse> {
+  return apiRequest<SupportedLanguagesResponse>(`${CATALOG_PREFIX}/languages`, READ_ONLY);
 }
 
 /** Datasets et compteurs d'une langue (FR-14). */

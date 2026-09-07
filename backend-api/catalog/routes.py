@@ -10,11 +10,14 @@ from catalog.api_schemas import (
     DatasetListResponse,
     DatasetSearchResponse,
     LanguageOverviewResponse,
+    SupportedLanguageResponse,
+    SupportedLanguagesResponse,
 )
 from catalog.mappers import dataset_to_detail, dataset_to_summary
 from catalog.service import CatalogService
 from core.config import Settings, get_settings
 from core.database import get_session
+from core.language_codes import list_supported_languages
 
 PUBLIC_API_VERSION = "1.0.0"
 
@@ -80,6 +83,11 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
                     ),
                     ApiEndpointInfo(
                         method="GET",
+                        path="/api/v1/languages",
+                        description="Vocabulaire des langues couvertes (code ISO 639-3 et nom).",
+                    ),
+                    ApiEndpointInfo(
+                        method="GET",
                         path="/api/v1/languages/overview",
                         description="Agrégation par langue : datasets et compteurs.",
                     ),
@@ -130,6 +138,29 @@ def create_catalog_router(*, tags: list[str], include_root: bool = False) -> API
         if settings.catalog_stub:
             return catalog_stub.search_by_language(language)
         return service.search_datasets_by_language(language)
+
+    @router.get(
+        "/languages",
+        response_model=SupportedLanguagesResponse,
+        summary="Lister les langues couvertes",
+        description=(
+            "Vocabulaire de langues proposé à la saisie et à la recherche : code canonique "
+            "ISO 639-3 et nom d'affichage (FR-11). Un code ISO 639-3 hors de cette liste "
+            "reste accepté à la soumission."
+        ),
+    )
+    def list_languages(
+        settings: Settings = Depends(get_settings),
+        session: Session = Depends(get_session),
+    ) -> SupportedLanguagesResponse:
+        languages = list_supported_languages(None if settings.catalog_stub else session)
+        return SupportedLanguagesResponse(
+            total=len(languages),
+            languages=[
+                SupportedLanguageResponse(code=language.code, name=language.name)
+                for language in languages
+            ],
+        )
 
     @router.get(
         "/languages/overview",

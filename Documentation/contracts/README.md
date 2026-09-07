@@ -7,7 +7,7 @@
 | Connecteur de source | [connector-contract.md](./connector-contract.md) | `backend-api/ingestion/connectors/` |
 | API `catalog` (recherche + fiche) | [catalog-api.md](./catalog-api.md) | `backend-api/catalog/api_schemas.py` + bouchon `catalog/stub.py` |
 | API `catalog` (filtrage) | [catalog-filter-api.md](./catalog-filter-api.md) | `GET /catalog/datasets/filter` (Story 2.1) |
-| API `catalog` (agrégation par langue) | [catalog-language-api.md](./catalog-language-api.md) | `GET /catalog/languages/overview` (Story 2.2) |
+| API `catalog` (agrégation par langue) | [catalog-language-api.md](./catalog-language-api.md) | `GET /catalog/languages`, `GET /catalog/languages/overview` (Story 2.2) |
 | **API publique v1** | [catalog-public-api.md](./catalog-public-api.md) | `/api/v1/*` (Story 2.3, FR-15) |
 | **API `accounts`** | [accounts-api.md](./accounts-api.md) | `/accounts/*` (Story 3.1, FR-16) |
 | **API admin datasets** | [accounts-admin-datasets-api.md](./accounts-admin-datasets-api.md) | `/accounts/admin/datasets/*` (Story 4.1, FR-19) |

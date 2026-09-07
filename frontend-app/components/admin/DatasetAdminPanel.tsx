@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { AdminShell } from "@/components/layout/AdminShell";
 import { ErrorBanner, WorkflowHeader } from "@/components/layout/WorkflowShell";
+import { LanguageField } from "@/components/ui/LanguageField";
 import {
   btnDark,
   btnGhost,
@@ -333,15 +334,12 @@ export function DatasetAdminPanel({ onLogout, adminName }: DatasetAdminPanelProp
               />
             </label>
 
-            <label className="space-y-2">
-              <span className={labelMono}>Langue (code ou alias)</span>
-              <input
-                required
-                value={form.language}
-                onChange={(event) => setForm({ ...form, language: event.target.value })}
-                className={inputClass}
-              />
-            </label>
+            <LanguageField
+              label="Langue (code ou alias)"
+              required
+              value={form.language}
+              onChange={(language) => setForm({ ...form, language })}
+            />
 
             <label className="space-y-2">
               <span className={labelMono}>Tâche NLP</span>

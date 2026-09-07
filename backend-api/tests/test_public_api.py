@@ -10,6 +10,7 @@ from core import models  # noqa: F401
 from core.config import get_settings
 from core.database import get_session
 from core.fts import init_fts5
+from core.language_codes import SUPPORTED_LANGUAGE_NAMES, fold_text
 from main import app
 
 
@@ -70,6 +71,27 @@ def test_public_api_manifest(public_api_client: TestClient) -> None:
     assert body["read_only"] is True
     assert body["version"] == "1.0.0"
     assert any(endpoint["path"] == "/api/v1/datasets/filter" for endpoint in body["endpoints"])
+
+
+def test_public_api_lists_supported_languages(public_api_client: TestClient) -> None:
+    response = public_api_client.get("/api/v1/languages")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == len(body["languages"])
+    assert body["total"] >= len(SUPPORTED_LANGUAGE_NAMES)
+
+    codes = {language["code"] for language in body["languages"]}
+    assert set(SUPPORTED_LANGUAGE_NAMES).issubset(codes)
+
+    # Le nom d'affichage est celui du registre, pas la valeur brute stockée en base :
+    # c'est lui que les formulaires proposent à la saisie.
+    names = {language["code"]: language["name"] for language in body["languages"]}
+    assert names["yor"] == "Yoruba"
+
+    # Tri par nom, pour que la liste déroulante soit parcourable.
+    displayed = [language["name"] for language in body["languages"]]
+    assert displayed == sorted(displayed, key=fold_text)
 
 
 def test_public_api_filter_by_language_and_task(public_api_client: TestClient) -> None:

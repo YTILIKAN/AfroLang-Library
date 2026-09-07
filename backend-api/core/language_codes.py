@@ -1,4 +1,5 @@
 import unicodedata
+from typing import NamedTuple
 
 from sqlmodel import Session, select
 
@@ -75,6 +76,75 @@ STATIC_LANGUAGE_ALIASES: dict[str, str] = {
     "ti": "tir",
 }
 
+
+
+class SupportedLanguage(NamedTuple):
+    """Une langue couverte par l'index, telle que proposée dans les formulaires."""
+
+    code: str
+    name: str
+
+
+# Nom d'affichage de chaque code canonique couvert par l'index. Source de vérité unique
+# du sélecteur de langue (formulaires de contribution et d'administration) et du message
+# d'erreur 422 : toute langue ajoutée ici devient proposée partout (FR-11).
+SUPPORTED_LANGUAGE_NAMES: dict[str, str] = {
+    "amh": "Amharique",
+    "nya": "Chichewa",
+    "hau": "Haoussa",
+    "ibo": "Igbo",
+    "kin": "Kinyarwanda",
+    "lin": "Lingala",
+    "lug": "Luganda",
+    "mlg": "Malgache",
+    "orm": "Oromo",
+    "sna": "Shona",
+    "som": "Somali",
+    "sot": "Sotho du Sud",
+    "swh": "Swahili",
+    "tir": "Tigrigna",
+    "tso": "Tsonga",
+    "tsn": "Tswana",
+    "wol": "Wolof",
+    "xho": "Xhosa",
+    "yor": "Yoruba",
+    "zul": "Zoulou",
+}
+
+
+def list_supported_languages(session: Session | None = None) -> list[SupportedLanguage]:
+    """
+    Langues proposées à la saisie, triées par nom (FR-11).
+
+    Le registre statique fournit les noms d'affichage ; la table `language` ajoute les
+    codes déjà présents dans l'index mais pas encore nommés ici, pour que la couverture
+    réelle reste visible sans redéploiement.
+    """
+    names = dict(SUPPORTED_LANGUAGE_NAMES)
+    if session is not None:
+        for candidate in session.exec(select(Language)).all():
+            names.setdefault(candidate.code, candidate.name)
+    return sorted(
+        (SupportedLanguage(code=code, name=name) for code, name in names.items()),
+        key=lambda language: fold_text(language.name),
+    )
+
+
+def unknown_language_detail(query: str, session: Session | None = None) -> str:
+    """
+    Message du 422 « langue non reconnue » : dit ce qui est attendu, pas seulement ce qui
+    a échoué. Un code hors index reste accepté s'il respecte la norme ISO 639-3, d'où le
+    rappel explicite du format (« fra » pour le français) avant la liste des langues.
+    """
+    listing = ", ".join(
+        f"{language.name} ({language.code})" for language in list_supported_languages(session)
+    )
+    return (
+        f"Langue « {query.strip()} » non reconnue. "
+        "Attendu : un code ISO 639-3 de 3 lettres (ex. « fra » pour le français, "
+        "« eng » pour l'anglais) ou le nom d'une langue couverte par l'index. "
+        f"Langues couvertes : {listing}."
+    )
 
 def fold_text(value: str) -> str:
     """Normalise casse et accents pour la résolution de langue."""

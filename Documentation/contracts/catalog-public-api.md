@@ -31,6 +31,7 @@ Alias interne (même comportement) : `/catalog/*`
 | GET | `/api/v1/datasets/search?language=` | 1.11 | Recherche par langue |
 | GET | `/api/v1/datasets/filter?...` | 2.1 | Filtrage combiné (langue, source, tâche, format) |
 | GET | `/api/v1/datasets/{id}` | 1.3 | Fiche dataset |
+| GET | `/api/v1/languages` | — | Vocabulaire des langues couvertes |
 | GET | `/api/v1/languages/overview?language=` | 2.2 | Agrégation par langue |
 
 Contrats détaillés :

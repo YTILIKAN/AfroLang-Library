@@ -2,10 +2,45 @@
 
 > Gouverné par FR-14, AD-3. Complète [catalog-api.md](./catalog-api.md).
 
-Schémas Pydantic : `LanguageOverviewResponse`, `LanguageAggregationStats`  
+Schémas Pydantic : `LanguageOverviewResponse`, `LanguageAggregationStats`, `SupportedLanguagesResponse`  
 Bouchon : `backend-api/catalog/stub.py` → `get_language_overview()`
 
 Base URL (local) : `http://127.0.0.1:8000/catalog`
+
+---
+
+## GET `/languages`
+
+Retourne le **vocabulaire des langues couvertes** : code canonique ISO 639-3 et nom
+d'affichage, triés par nom. Alimente le sélecteur de langue des formulaires de
+contribution et d'administration, ainsi que le message d'erreur `422` sur une langue
+non reconnue.
+
+La liste combine le registre statique `SUPPORTED_LANGUAGE_NAMES`
+(`backend-api/core/language_codes.py`, source des noms d'affichage) et les codes déjà
+présents dans la table `language` mais pas encore nommés dans le registre. Avec
+`CATALOG_STUB=true`, seul le registre statique est servi.
+
+Cette liste **guide** la saisie sans la fermer : un code ISO 639-3 valide mais absent de
+l'index reste accepté à la soumission (voir
+[accounts-admin-datasets-api.md](./accounts-admin-datasets-api.md)).
+
+### Paramètres
+
+Aucun.
+
+### Réponse `200` — `SupportedLanguagesResponse`
+
+```json
+{
+  "total": 20,
+  "languages": [
+    { "code": "amh", "name": "Amharique" },
+    { "code": "nya", "name": "Chichewa" },
+    { "code": "hau", "name": "Haoussa" }
+  ]
+}
+```
 
 ---
 
