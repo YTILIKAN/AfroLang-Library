@@ -1,64 +1,17 @@
 # Frontend — AfroLang-Library
 
-Interface Next.js 16 pour la consultation publique et l'administration authentifiée.
+Interface Next.js 16 (App Router, React 19, TypeScript, Tailwind CSS 4) pour la consultation
+publique du catalogue, la contribution des chercheurs et l'administration.
 
-## Story 3.4 — Authentification chercheur
-
-Pages :
-- [`/auth/login`](http://localhost:3000/auth/login) — connexion
-- [`/auth/register`](http://localhost:3000/auth/register) — création de compte
-- [`/contribute`](http://localhost:3000/contribute) — espace contribution (authentification requise)
-
-La consultation publique (`/search`, `/filter`, `/languages`) reste accessible sans compte.
-
-## Story 3.5 — Soumission d'un dataset
-
-Page : [`/contribute/submit`](http://localhost:3000/contribute/submit) — `POST /accounts/datasets` (bouchon si `ACCOUNTS_STUB=true`)
-
-## Story 3.6 — Mes datasets
-
-Page : [`/contribute/mine`](http://localhost:3000/contribute/mine) — `GET/PATCH/DELETE /accounts/datasets/mine|{id}`
-
-## Story 3.4 — Authentification chercheur
-
-Pages :
-- [`/languages`](http://localhost:3000/languages) — sélection d'une langue
-- [`/languages/Yoruba`](http://localhost:3000/languages/Yoruba) — agrégation via `GET /api/v1/languages/overview`
-
-## Story 2.4 — Interface de filtres
-
-Page : [`/filter`](http://localhost:3000/filter) — filtrage combiné via `GET /api/v1/datasets/filter`
-
-Exemple : http://localhost:3000/filter?language=Swahili&task=classification
-
-## Story 1.12 — Recherche et fiches dataset
-
-Pages :
-- [`/search`](http://localhost:3000/search) — recherche par langue (`GET /api/v1/datasets/search`)
-- [`/datasets/{id}`](http://localhost:3000/datasets/1) — fiche métadonnées + lien vers la source (FR-13)
-
-## Story 4.3 — Administration des datasets
-
-Page : [`/admin/datasets`](http://localhost:3000/admin/datasets)
-
-- Liste tous les datasets via `GET /accounts/admin/datasets`
-- Création, modification, suppression (contrat Story 4.1)
-- Accès réservé au rôle **Admin** (vérification côté API + garde UI)
-
-## Story 4.4 — Gestion des comptes
-
-Page : [`/admin/accounts`](http://localhost:3000/admin/accounts)
-
-- Liste, création, attribution de rôles et désactivation via `GET/POST/PATCH /accounts/admin/accounts`
-- Contrat Story 4.2 — accès Admin uniquement
+Installation complète du projet (base de données, backend, variables d'environnement,
+déploiement) : [Documentation/installation.md](../Documentation/installation.md).
 
 ## Démarrage local
 
 ```powershell
-# Terminal 1 — API (bouchon recommandé pour le frontend seul)
+# Terminal 1 — API (bouchon possible pour travailler sans base)
 cd backend-api
-$env:ACCOUNTS_STUB="true"
-$env:CATALOG_STUB="true"
+copy .env.example .env
 .\.venv\Scripts\uvicorn main:app --reload --port 8000
 
 # Terminal 2 — Frontend
@@ -68,30 +21,68 @@ npm install
 npm run dev
 ```
 
-Ouvrir http://localhost:3000 — recherche : http://localhost:3000/search?language=yoruba
+Ouvrir <http://localhost:3000>. Exemple de recherche :
+<http://localhost:3000/catalog?language=yoruba>
 
-Compte bouchon admin : `admin@afriland.org` / `admin123`
+Compte admin initial : `admin@afriland.org` / `admin123`.
+
+Pour travailler sans PostgreSQL, poser `CATALOG_STUB=true` et `ACCOUNTS_STUB=true` dans
+`backend-api/.env` — voir [Documentation/contracts/README.md](../Documentation/contracts/README.md).
 
 ## Variables d'environnement
 
 | Variable | Défaut | Description |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:8000` | URL de l'API backend |
+| `API_URL` | `http://127.0.0.1:8001` en développement | URL du backend pour le rendu serveur et le proxy `/api-backend/*` |
+| `NEXT_PUBLIC_API_URL` | non défini | URL du backend appelée directement par le navigateur. Si absente, le navigateur passe par le proxy `/api-backend` |
+| `DEV_ALLOWED_ORIGINS` | vide | origines de développement supplémentaires (IP du réseau local, tunnel, machine virtuelle) |
+
+## Pages
+
+| Route | Rôle |
+| --- | --- |
+| `/` | accueil, compteurs du catalogue et entrée de recherche |
+| `/catalog` | catalogue unifié : recherche, filtres combinés et exploration par langue (`GET /api/v1/datasets/search`, `/filter`) |
+| `/languages/{langue}` | fiche langue et agrégation des ressources (`GET /api/v1/languages/overview`) |
+| `/datasets/{id}` | fiche dataset et lien vers la source d'origine |
+| `/api-docs` | documentation de l'API publique côté produit |
+| `/auth/login`, `/auth/register` | connexion et création de compte |
+| `/contribute` | espace chercheur, authentification requise |
+| `/contribute/submit` | soumission d'un dataset (`POST /accounts/datasets`) |
+| `/contribute/mine` | gestion de ses contributions (`GET/PATCH/DELETE /accounts/datasets/mine|{id}`) |
+| `/admin/datasets` | administration des datasets, rôle Admin (`/accounts/admin/datasets`) |
+| `/admin/accounts` | gestion des comptes et des rôles, rôle Admin (`/accounts/admin/accounts`) |
+
+`/search`, `/filter` et `/languages` sont conservées comme redirections permanentes vers
+`/catalog`, qui accepte les mêmes paramètres de requête.
 
 ## Structure
 
 ```
 frontend-app/
-├── app/contribute/       # Story 3.4+ — espace chercheur (gate)
-├── app/auth/             # Story 3.4 — login / register
-├── app/languages/        # Story 2.5 — page par langue
-├── app/filter/           # Story 2.4 — filtres combinés
-├── app/search/           # Story 1.12 — recherche par langue
-├── app/datasets/[id]/    # Story 1.12 — fiche dataset
-├── app/admin/datasets/   # Story 4.3
-├── app/admin/accounts/   # Story 4.4
-├── components/catalog/   # Cartes, fiche, formulaire de recherche
-├── components/admin/     # Panneaux CRUD + navigation admin
-├── components/auth/      # AuthProvider, gates, formulaires
-└── lib/api/              # Client API catalog + accounts (AD-3)
+├── app/                  # routes App Router
+├── components/catalog/   # recherche, filtres, cartes et fiche dataset
+├── components/home/      # sections de l'accueil
+├── components/auth/      # AuthProvider, gardes de rôle, formulaires
+├── components/contribute/# soumission et gestion des contributions
+├── components/admin/     # panneaux CRUD datasets et comptes
+├── components/docs/      # rendu de la documentation API
+├── components/layout/    # en-tête, pied de page, navigation
+├── components/ui/        # éléments d'interface partagés
+├── lib/api/              # clients API catalog et accounts
+├── lib/config.ts         # résolution de l'URL du backend
+└── test/                 # suite vitest, organisée par dossier de composants
 ```
+
+## Vérifications
+
+```bash
+npm test              # vitest
+npx tsc --noEmit      # types
+npx eslint .          # lint
+```
+
+`npm run build` échoue tant que le dépôt est placé dans un chemin contenant une apostrophe : le
+chemin du projet est injecté sans échappement dans du code généré. Cloner le dépôt dans un
+chemin sans caractère spécial, ou s'appuyer sur les trois commandes ci-dessus et le serveur de
+développement pour valider un changement.

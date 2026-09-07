@@ -109,6 +109,54 @@ def test_researcher_cannot_access_admin_datasets(admin_client) -> None:
     assert response.status_code == 403
 
 
+def test_unknown_language_error_states_the_expected_format(admin_client) -> None:
+    """Un code hors norme est refusé en disant quoi saisir, pas seulement que c'est faux."""
+    client, engine = admin_client
+    _register(client, "admin-lang@example.com")
+    _promote_to_admin(engine, "admin-lang@example.com")
+    token = _login(client, "admin-lang@example.com")
+
+    response = client.post(
+        "/accounts/admin/datasets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Corpus français",
+            "source_url": "https://example.com/fr",
+            "language": "fr",
+            "task": "asr",
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert "fr" in detail
+    assert "ISO 639-3" in detail
+    assert "fra" in detail
+    assert "Yoruba (yor)" in detail
+
+
+def test_iso_639_3_code_outside_the_index_is_accepted(admin_client) -> None:
+    """La liste proposée guide la saisie sans fermer l'index aux langues à venir."""
+    client, engine = admin_client
+    _register(client, "admin-twi@example.com")
+    _promote_to_admin(engine, "admin-twi@example.com")
+    token = _login(client, "admin-twi@example.com")
+
+    response = client.post(
+        "/accounts/admin/datasets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Corpus Twi",
+            "source_url": "https://example.com/twi",
+            "language": "twi",
+            "task": "asr",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["language"]["code"] == "twi"
+
+
 def test_admin_crud_dataset_lifecycle(admin_client) -> None:
     client, engine = admin_client
     _register(client, "admin2@example.com")

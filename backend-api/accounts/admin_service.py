@@ -10,7 +10,7 @@ from catalog.api_schemas import DatasetDetailResponse, DatasetSummaryResponse
 from catalog.filter_params import normalize_data_format, normalize_source_slug, resolve_task_filter
 from catalog.mappers import dataset_to_detail, dataset_to_summary
 from catalog.service import CatalogService
-from core.language_codes import resolve_language_code
+from core.language_codes import resolve_language_code, unknown_language_detail
 from core.models import Language, Provenance, UNKNOWN
 from core.schemas import DatasetInput, LanguageInput, LicenseInput, SourceInput
 from ingestion.service import IngestionService
@@ -139,7 +139,7 @@ class AdminDatasetService:
             return folded
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Langue non reconnue",
+            detail=unknown_language_detail(query, self.session),
         )
 
     @staticmethod

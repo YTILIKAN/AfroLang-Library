@@ -81,3 +81,8 @@ Implémentation réelle : persistance SQLite via `IngestionService` (écriture) 
 | 403 | Rôle non Admin |
 | 404 | Dataset introuvable |
 | 422 | Langue ou tâche non reconnue |
+
+Le `detail` d'un `422` sur la langue énonce le format attendu — un code ISO 639-3 de trois
+lettres — et énumère les langues couvertes, celles-là mêmes que sert
+`GET /api/v1/languages`. Un code de trois lettres hors index est accepté : la liste oriente
+la saisie, elle ne la restreint pas.

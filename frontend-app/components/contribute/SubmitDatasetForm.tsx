@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
+import { LanguageField } from "@/components/ui/LanguageField";
 import {
   btnDark,
   btnGhost,
@@ -159,16 +160,12 @@ export function SubmitDatasetForm({ onSuccess }: SubmitDatasetFormProps) {
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-2">
-          <span className={labelMono}>Langue</span>
-          <input
-            required
-            value={form.language}
-            onChange={(e) => setForm({ ...form, language: e.target.value })}
-            placeholder="twi, Yoruba…"
-            className={inputClass}
-          />
-        </label>
+        <LanguageField
+          label="Langue"
+          required
+          value={form.language}
+          onChange={(language) => setForm({ ...form, language })}
+        />
 
         <label className="space-y-2">
           <span className={labelMono}>Tâche NLP</span>

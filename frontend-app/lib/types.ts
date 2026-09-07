@@ -27,6 +27,18 @@ export interface LanguageInfo {
   region: string;
 }
 
+/** Une langue du vocabulaire couvert par l'index (GET /api/v1/languages). */
+export interface SupportedLanguage {
+  code: string;
+  name: string;
+}
+
+/** Réponse de GET /api/v1/languages — options proposées à la saisie d'une langue. */
+export interface SupportedLanguagesResponse {
+  total: number;
+  languages: SupportedLanguage[];
+}
+
 export interface TaskInfo {
   code: string;
   label: string;

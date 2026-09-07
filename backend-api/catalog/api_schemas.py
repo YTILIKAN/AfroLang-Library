@@ -10,6 +10,20 @@ class LanguageResponse(BaseModel):
     region: str
 
 
+class SupportedLanguageResponse(BaseModel):
+    """Une langue proposée à la saisie dans les formulaires de contribution."""
+
+    code: str = Field(description="Code canonique ISO 639-3")
+    name: str = Field(description="Nom d'affichage")
+
+
+class SupportedLanguagesResponse(BaseModel):
+    """Réponse de GET /api/v1/languages — vocabulaire de langues couvert par l'index."""
+
+    total: int
+    languages: list[SupportedLanguageResponse]
+
+
 class SourceResponse(BaseModel):
     slug: str
     name: str
